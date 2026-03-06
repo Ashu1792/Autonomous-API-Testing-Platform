@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Autonomous API Monitoring Platform</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family: Arial;
+background:#0f172a;
+color:white;
+text-align:center;
+}
+
+table{
+margin:auto;
+border-collapse:collapse;
+margin-top:30px;
+}
+
+td,th{
+border:1px solid #334155;
+padding:12px;
+}
+
+th{
+background:#1e293b;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:20px auto;
+width:300px;
+border-radius:10px;
+}
+
+.chart-container{
+width:700px;
+margin:auto;
+margin-top:40px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🚀 Autonomous API Monitoring Dashboard</h1>
+
+<div class="card">
+
+<h3>Contract Test</h3>
+<p>{{contract}}</p>
+
+</div>
+
+<table>
+
+<tr>
+<th>API</th>
+<th>Status</th>
+<th>Response Time (sec)</th>
+<th>Failure Risk</th>
+</tr>
+
+{% for api in apis %}
+
+<tr>
+
+<td>{{api.url}}</td>
+<td>
+    <td>
+
+{% if api.status == 200 %}
+
+<span style="color:lime; font-weight:bold;">🟢 {{api.status}}</span>
+
+{% else %}
+
+<span style="color:red; font-weight:bold;">🔴 {{api.status}}</span>
+
+{% endif %}
+
+</td>
+</td>
+<td>
+    <td>
+
+{% if api.time < 0.5 %}
+
+<span style="color:lime;">{{api.time}}</span>
+
+{% elif api.time < 1 %}
+
+<span style="color:orange;">{{api.time}}</span>
+
+{% else %}
+
+<span style="color:red;">{{api.time}}</span>
+
+{% endif %}
+
+</td>
+</td>
+<td>{{api.risk}}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<div class="chart-container">
+
+<h2>📊 API Response Time Trend</h2>
+
+<canvas id="responseChart"></canvas>
+
+</div>
+
+<div class="chart-container">
+
+<h2>⚡ API Health Score</h2>
+
+<canvas id="healthChart"></canvas>
+
+</div>
+
+<script>
+
+const labels = {{labels | tojson}};
+const times = {{times | tojson}};
+
+const ctx = document.getElementById("responseChart");
+
+new Chart(ctx,{
+
+type:"line",
+
+data:{
+labels:labels,
+datasets:[{
+label:"Response Time",
+data:times,
+borderColor:"cyan",
+borderWidth:2,
+fill:false,
+tension:0.3
+}]
+},
+
+options:{
+responsive:true,
+scales:{
+y:{
+beginAtZero:true
+}
+}
+}
+
+});
+
+
+const healthData = times.map(t => 1/t);
+
+const ctx2 = document.getElementById("healthChart");
+
+new Chart(ctx2,{
+
+type:"bar",
+
+data:{
+labels:labels,
+datasets:[{
+label:"API Health Score",
+data:healthData,
+backgroundColor:"orange"
+}]
+}
+
+});
+
+setTimeout(function(){
+location.reload();
+},10000);
+
+</script>
+
+</body>
+
+</html>
