@@ -54,7 +54,7 @@ def monitor_api():
 
         # append dictionary (better for dashboard)
         results.append({
-            "api": url,
+            "api": url.split("?")[0],
             "status": status,
             "response_time": response_time,
             "risk": risk

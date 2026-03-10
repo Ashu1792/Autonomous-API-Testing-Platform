@@ -10,23 +10,31 @@ app = Flask(__name__)
 @app.route("/")
 def dashboard():
 
-    # get API monitoring results
     results = monitor_api()
 
-    # validate contract
     contract = validate_contract()
 
-    # get logs for charts
     labels, times = get_logs()
+
+    total = len(results)
+
+    healthy = len([r for r in results if r["status"] == 200])
+
+    failed = total - healthy
+
+    avg_time = round(sum(r["response_time"] for r in results)/total,3) if total > 0 else 0
 
     return render_template(
         "dashboard.html",
         results=results,
         contract=contract,
         labels=labels,
-        times=times
+        times=times,
+        total=total,
+        healthy=healthy,
+        failed=failed,
+        avg_time=avg_time
     )
-
 
 def get_logs():
 
