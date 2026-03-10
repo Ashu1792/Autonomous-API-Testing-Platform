@@ -9,7 +9,7 @@ API_LIST = [
     "https://api.openweathermap.org/data/2.5/weather?q=London&appid=b452d4b9373592eb07f553041a7e5038",
     "https://jsonplaceholder.typicode.com/posts",
     "https://api.github.com/users/octocat"
-    "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+   
 ]
 
 
