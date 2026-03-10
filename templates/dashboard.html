@@ -56,10 +56,8 @@ margin-top:40px;
 <h1>🚀 Autonomous API Monitoring Dashboard</h1>
 
 <div class="card">
-
 <h3>Contract Test</h3>
-<p>{{contract}}</p>
-
+<p>{{ contract }}</p>
 </div>
 
 <table>
@@ -71,46 +69,35 @@ margin-top:40px;
 <th>Failure Risk</th>
 </tr>
 
-{% for api in apis %}
+{% for api in results %}
 
 <tr>
 
-<td>{{api.url}}</td>
-<td>
-    <td>
+<td>{{ api.api }}</td>
 
+<td>
 {% if api.status == 200 %}
-
-<span style="color:lime; font-weight:bold;">🟢 {{api.status}}</span>
-
+<span style="color:lime; font-weight:bold;">🟢 {{ api.status }}</span>
 {% else %}
-
-<span style="color:red; font-weight:bold;">🔴 {{api.status}}</span>
-
+<span style="color:red; font-weight:bold;">🔴 {{ api.status }}</span>
 {% endif %}
+</td>
 
-</td>
-</td>
 <td>
-    <td>
 
-{% if api.time < 0.5 %}
+{% if api.response_time < 0.5 %}
+<span style="color:lime;">{{ api.response_time }}</span>
 
-<span style="color:lime;">{{api.time}}</span>
-
-{% elif api.time < 1 %}
-
-<span style="color:orange;">{{api.time}}</span>
+{% elif api.response_time < 1 %}
+<span style="color:orange;">{{ api.response_time }}</span>
 
 {% else %}
-
-<span style="color:red;">{{api.time}}</span>
-
+<span style="color:red;">{{ api.response_time }}</span>
 {% endif %}
 
 </td>
-</td>
-<td>{{api.risk}}</td>
+
+<td>{{ api.risk }}</td>
 
 </tr>
 
@@ -121,7 +108,6 @@ margin-top:40px;
 <div class="chart-container">
 
 <h2>📊 API Response Time Trend</h2>
-
 <canvas id="responseChart"></canvas>
 
 </div>
@@ -129,27 +115,26 @@ margin-top:40px;
 <div class="chart-container">
 
 <h2>⚡ API Health Score</h2>
-
 <canvas id="healthChart"></canvas>
 
 </div>
 
 <script>
 
-const labels = {{labels | tojson}};
-const times = {{times | tojson}};
+const chartLabels = {{ labels | default([]) | tojson }};
+const responseTimes = {{ times | default([]) | tojson }};
 
-const ctx = document.getElementById("responseChart");
+const ctx = document.getElementById("responseChart").getContext("2d");
 
 new Chart(ctx,{
 
 type:"line",
 
 data:{
-labels:labels,
+labels:chartLabels,
 datasets:[{
 label:"Response Time",
-data:times,
+data:responseTimes,
 borderColor:"cyan",
 borderWidth:2,
 fill:false,
@@ -169,16 +154,16 @@ beginAtZero:true
 });
 
 
-const healthData = times.map(t => 1/t);
+const healthData = responseTimes.map(t => t > 0 ? 1/t : 0);
 
-const ctx2 = document.getElementById("healthChart");
+const ctx2 = document.getElementById("healthChart").getContext("2d");
 
 new Chart(ctx2,{
 
 type:"bar",
 
 data:{
-labels:labels,
+labels:chartLabels,
 datasets:[{
 label:"API Health Score",
 data:healthData,
@@ -187,6 +172,7 @@ backgroundColor:"orange"
 }
 
 });
+
 
 setTimeout(function(){
 location.reload();
