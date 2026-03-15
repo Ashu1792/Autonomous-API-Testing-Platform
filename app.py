@@ -20,7 +20,8 @@ def dashboard():
     healthy = len([r for r in results if r["status"] == 200])
     failed = total - healthy
 
-    avg_time = round(sum(r["response_time"] for r in results)/total,3) if total>0 else 0
+    avg_time = round(sum(r["response_time"] for r in results) / total, 3) if total > 0 else 0
+    risk_score = calculate_risk_score(results)
 
     return render_template(
         "dashboard.html",
@@ -31,7 +32,8 @@ def dashboard():
         total=total,
         healthy=healthy,
         failed=failed,
-        avg_time=avg_time
+        avg_time=avg_time,
+        risk_score=risk_score
     )
 
 
@@ -52,7 +54,7 @@ def get_logs():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT response_time,timestamp
+        SELECT response_time, timestamp
         FROM logs
         ORDER BY id DESC
         LIMIT 10
@@ -63,14 +65,14 @@ def get_logs():
 
     rows.reverse()
 
-    labels=[]
-    times=[]
+    labels = []
+    times = []
 
     for r in rows:
         times.append(r[0])
         labels.append(r[1][-8:])
 
-    return labels,times
+    return labels, times
 
 
 def get_failures():
@@ -79,19 +81,37 @@ def get_failures():
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT api_url,status_code,timestamp
-    FROM logs
-    WHERE status_code!=200
-    ORDER BY id DESC
-    LIMIT 5
+        SELECT api_url, status_code, timestamp
+        FROM logs
+        WHERE status_code != 200
+        ORDER BY id DESC
+        LIMIT 5
     """)
 
-    rows=cursor.fetchall()
+    rows = cursor.fetchall()
     conn.close()
 
     return rows
 
 
+def calculate_risk_score(results):
+
+    score = 0
+
+    for r in results:
+
+        if r["status"] != 200:
+            score += 40
+
+        elif r["response_time"] > 1:
+            score += 20
+
+        elif r["response_time"] > 0.5:
+            score += 10
+
+    score = min(score, 100)
+
+    return score
 
 
 if __name__ == "__main__":

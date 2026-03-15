@@ -10,50 +10,75 @@
 
 <link rel="stylesheet" href="/static/style.css">
 
+<style>
+
+body{
+background:#0f172a;
+color:white;
+}
+
+.card{
+background:#1e293b;
+border:none;
+border-radius:10px;
+box-shadow:0 0 15px rgba(0,0,0,0.4);
+}
+
+h1,h2,h3,h4{
+color:#e2e8f0;
+}
+
+.chart-card{
+padding:20px;
+margin-top:20px;
+}
+
+</style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-<h1 class="text-center mt-4">🚀 API Monitoring Dashboard</h1>
+<h1 class="text-center mt-4">🚀 Autonomous API Monitoring Platform</h1>
 
 
 <!-- STATS -->
 
-<div class="row mt-4 text-center">
+<div class="row mt-4 text-center g-4">
 
 <div class="col-md-3">
-<div class="card bg-dark text-white">
+<div class="card text-white">
 <div class="card-body">
-<h5>Total APIs</h5>
+<h6>Total APIs</h6>
 <h2>{{ total }}</h2>
 </div>
 </div>
 </div>
 
 <div class="col-md-3">
-<div class="card bg-success text-white">
+<div class="card text-success">
 <div class="card-body">
-<h5>Healthy</h5>
+<h6>Healthy</h6>
 <h2>{{ healthy }}</h2>
 </div>
 </div>
 </div>
 
 <div class="col-md-3">
-<div class="card bg-danger text-white">
+<div class="card text-danger">
 <div class="card-body">
-<h5>Failed</h5>
+<h6>Failed</h6>
 <h2>{{ failed }}</h2>
 </div>
 </div>
 </div>
 
 <div class="col-md-3">
-<div class="card bg-info text-white">
+<div class="card text-info">
 <div class="card-body">
-<h5>Avg Response</h5>
+<h6>Avg Response</h6>
 <h2>{{ avg_time }} s</h2>
 </div>
 </div>
@@ -62,11 +87,14 @@
 </div>
 
 
+
 <!-- MONITORING TABLE -->
 
-<h2 class="mt-5 text-center">📡 API Monitoring</h2>
+<h3 class="mt-5 text-center">📡 API Monitoring</h3>
 
-<table class="table table-dark table-striped mt-3">
+<div class="card p-3">
+
+<table class="table table-dark table-striped">
 
 <tr>
 <th>API</th>
@@ -99,23 +127,32 @@
 
 </table>
 
+</div>
 
-<!-- REAL TIME CHART -->
 
-<div class="row mt-5">
+
+<!-- CHARTS GRID -->
+
+<div class="row mt-5 g-4">
 
 <div class="col-md-6">
 
-<h4>Response Time Trend</h4>
+<div class="card chart-card">
+
+<h4>📈 Response Time Trend</h4>
 
 <canvas id="responseChart"></canvas>
+
+</div>
 
 </div>
 
 
 <div class="col-md-6">
 
-<h4>API Health Distribution</h4>
+<div class="card chart-card">
+
+<h4>🟢 API Health Distribution</h4>
 
 <canvas id="healthChart"></canvas>
 
@@ -123,17 +160,77 @@
 
 </div>
 
+</div>
 
-<!-- LATENCY CHART -->
 
-<h3 class="mt-5 text-center">⚡ API Latency Comparison</h3>
+
+<!-- LATENCY -->
+
+<div class="card chart-card mt-4">
+
+<h3 class="text-center">⚡ API Latency Comparison</h3>
 
 <canvas id="latencyChart"></canvas>
+
+</div>
+
+
+
+<!-- AI PREDICTION -->
+
+<div class="card chart-card mt-5 text-center">
+
+<h3>🤖 AI Failure Prediction</h3>
+
+<div style="width:320px;margin:auto">
+
+<canvas id="riskGauge"></canvas> </div>
+
+<div class="text-center mt-3">
+
+<h2 id="riskValue">{{ risk_score }}%</h2>
+
+{% if risk_score < 30 %}
+<span class="badge bg-success">LOW RISK</span>
+
+{% elif risk_score < 70 %}
+<span class="badge bg-warning text-dark">MEDIUM RISK</span>
+
+{% else %}
+<span class="badge bg-danger">HIGH RISK</span>
+
+{% endif %}
+
+</div>
+
+</div>
+
+<h4 class="mt-3">Risk Score: {{ risk_score }}%</h4>
+
+<p>
+
+{% if risk_score|default(0) < 30 %}
+<span class="badge bg-success">LOW RISK</span>
+
+{% elif risk_score < 70 %}
+<span class="badge bg-warning text-dark">MEDIUM RISK</span>
+
+{% else %}
+<span class="badge bg-danger">HIGH RISK</span>
+
+{% endif %}
+
+</p>
+
+</div>
+
 
 
 <!-- FAILURE HISTORY -->
 
 <h3 class="mt-5">🚨 Recent API Failures</h3>
+
+<div class="card p-3">
 
 <table class="table table-dark table-bordered">
 
@@ -157,11 +254,13 @@
 
 </div>
 
+</div>
+
+
 
 <script>
 
-
-// REAL TIME RESPONSE CHART
+// RESPONSE TREND
 
 const responseChart = new Chart(
 document.getElementById("responseChart"),{
@@ -173,8 +272,8 @@ labels:[],
 datasets:[{
 label:"Response Time",
 data:[],
-borderColor:"cyan",
-backgroundColor:"rgba(0,255,255,0.1)",
+borderColor:"#22d3ee",
+backgroundColor:"rgba(34,211,238,0.1)",
 tension:0.3,
 fill:true
 }]
@@ -214,7 +313,7 @@ data:{
 labels:["Healthy","Failed"],
 datasets:[{
 data:[{{ healthy }},{{ failed }}],
-backgroundColor:["green","red"]
+backgroundColor:["#22c55e","#ef4444"]
 }]
 }
 
@@ -233,11 +332,89 @@ labels: {{ results | map(attribute='api') | list | tojson }},
 datasets:[{
 label:"Response Time",
 data: {{ results | map(attribute='response_time') | list | tojson }},
-backgroundColor:"orange"
+backgroundColor:"#f59e0b"
 }]
 }
 
 })
+
+
+
+// AI FAILURE GAUGE
+
+const riskScore = {{ risk_score }};
+
+const ctx = document.getElementById("riskGauge");
+
+const gauge = new Chart(ctx, {
+
+type: "doughnut",
+
+data: {
+datasets: [{
+data: [30, 40, 30],
+backgroundColor: [
+"#22c55e",   // green
+"#facc15",   // yellow
+"#ef4444"    // red
+],
+borderWidth:0
+}]
+},
+
+options: {
+
+rotation: -90,
+circumference: 180,
+cutout: "75%",
+
+plugins: {
+legend: { display:false },
+tooltip: { enabled:false }
+}
+
+},
+
+plugins: [{
+
+id: 'needle',
+
+afterDraw(chart) {
+
+const {ctx} = chart;
+
+const width = chart.chartArea.right - chart.chartArea.left;
+const needleValue = riskScore;
+const angle = Math.PI * (needleValue / 100);
+
+ctx.save();
+
+const cx = chart.chartArea.left + width / 2;
+const cy = chart.chartArea.bottom;
+
+ctx.translate(cx, cy);
+ctx.rotate(-Math.PI + angle);
+
+ctx.beginPath();
+ctx.moveTo(0, -5);
+ctx.lineTo(width / 2.2, 0);
+ctx.lineTo(0, 5);
+ctx.fillStyle = "#ffffff";
+ctx.fill();
+
+ctx.restore();
+
+ctx.beginPath();
+ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+ctx.fillStyle = "#ffffff";
+ctx.fill();
+
+}
+}]
+
+
+
+});
 
 </script>
 

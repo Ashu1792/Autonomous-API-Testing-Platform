@@ -1,25 +1,59 @@
-body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-}
+.dashboard-grid{
 
-h1{
-font-weight:bold;
+display:grid;
+grid-template-columns: 1fr 1fr;
+gap:25px;
+padding:40px;
+max-width:1400px;
+margin:auto;
+
 }
 
 .card{
-border-radius:10px;
-box-shadow:0 4px 12px rgba(0,0,0,0.4);
-}
 
-table{
-border-radius:10px;
-overflow:hidden;
-}
-
-canvas{
 background:#1e293b;
-padding:10px;
+padding:25px;
 border-radius:10px;
+box-shadow:0 0 15px rgba(0,0,0,0.4);
+
+}
+
+.card h3{
+
+margin-bottom:20px;
+font-size:18px;
+color:#e2e8f0;
+
+}
+
+.card canvas{
+
+width:100%;
+height:300px;
+
+}
+
+.wide{
+
+grid-column: span 2;
+
+}
+
+.risk-text{
+
+text-align:center;
+margin-top:15px;
+font-size:20px;
+font-weight:bold;
+
+}
+#gauge-container{
+
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+width:350px;
+margin:auto;
+box-shadow:0 0 20px rgba(0,0,0,0.4);
+
 }
