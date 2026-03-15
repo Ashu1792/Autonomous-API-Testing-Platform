@@ -1,33 +1,36 @@
 import smtplib
 from email.mime.text import MIMEText
 
-EMAIL = "your_email@gmail.com"
-PASSWORD = "your_app_password"
+EMAIL = "Ashupal1507@gmail.com"
+PASSWORD = "cpsj avhl nzbd jnpy"
+TO_EMAIL = "your_email@gmail.com"
 
-def send_alert(api_url, status):
+def send_alert(api, status):
 
-    message = f"API FAILURE ALERT\n\nAPI: {api_url}\nStatus Code: {status}"
+    subject = "⚠ API Failure Alert"
 
-    msg = MIMEText(message)
+    body = f"""
+    API Monitoring Alert
 
-    msg["Subject"] = "API Monitoring Alert"
+    API: {api}
+    Status Code: {status}
+
+    The API is not responding correctly.
+    """
+
+    msg = MIMEText(body)
+
+    msg["Subject"] = subject
     msg["From"] = EMAIL
-    msg["To"] = EMAIL
+    msg["To"] = TO_EMAIL
 
     try:
-
-        server = smtplib.SMTP("smtp.gmail.com",587)
-
-        server.starttls()
-
+        server = smtplib.SMTP_SSL("smtp.gmail.com",465)
         server.login(EMAIL,PASSWORD)
-
         server.send_message(msg)
-
         server.quit()
 
         print("Alert email sent")
 
     except Exception as e:
-
-        print("Email error:",e)
+        print("Email alert failed:",e)

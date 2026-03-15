@@ -110,17 +110,19 @@
 
 <div class="row mt-5">
 
-<div class="col-md-6">
+<div class="col-md-6 text-center">
 
 <h4>Response Time Trend</h4>
 <canvas id="responseChart"></canvas>
 
 </div>
 
-<div class="col-md-6">
+<div class="col-md-6 text-center">
 
 <h4>API Health Distribution</h4>
+<div style="width:380px;margin:auto;">
 <canvas id="healthChart"></canvas>
+</div>
 
 </div>
 
@@ -134,6 +136,9 @@
 const labels = {{ labels | tojson }};
 const times = {{ times | tojson }};
 
+
+// Response Time Chart
+
 new Chart(document.getElementById("responseChart"),{
 
 type:"line",
@@ -144,11 +149,25 @@ datasets:[{
 label:"Response Time",
 data:times,
 borderColor:"cyan",
+backgroundColor:"rgba(0,255,255,0.1)",
+borderWidth:2,
 tension:0.3
 }]
+},
+
+options:{
+responsive:true,
+scales:{
+y:{
+beginAtZero:true
+}
+}
 }
 
 });
+
+
+// API Health Pie Chart
 
 new Chart(document.getElementById("healthChart"),{
 
@@ -160,13 +179,36 @@ datasets:[{
 data:[{{ healthy }},{{ failed }}],
 backgroundColor:["green","red"]
 }]
+},
+
+options:{
+responsive:true,
+maintainAspectRatio:false
 }
 
 });
 
+
+// Auto Refresh
+
 setTimeout(function(){
 location.reload();
 },10000);
+
+
+// Alert System
+
+let alerts = [];
+
+{% for api in results %}
+{% if api.status != 200 %}
+alerts.push("{{ api.api }}");
+{% endif %}
+{% endfor %}
+
+if(alerts.length > 0){
+alert("⚠ API Failure Detected:\n\n" + alerts.join("\n"));
+}
 
 </script>
 

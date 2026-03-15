@@ -1,28 +1,25 @@
 body{
-
-font-family:Arial;
 background:#0f172a;
 color:white;
-text-align:center;
+font-family:Arial;
+}
 
+h1{
+font-weight:bold;
+}
+
+.card{
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,0.4);
 }
 
 table{
-
-margin:auto;
-border-collapse:collapse;
-
+border-radius:10px;
+overflow:hidden;
 }
 
-td,th{
-
-border:1px solid white;
-padding:10px;
-
-}
-
-th{
-
+canvas{
 background:#1e293b;
-
+padding:10px;
+border-radius:10px;
 }
