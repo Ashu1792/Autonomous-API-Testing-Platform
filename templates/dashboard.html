@@ -15,6 +15,29 @@
 
 <body>
 
+<!-- Toast Alert -->
+
+<div class="position-fixed top-0 end-0 p-3" style="z-index:11">
+
+<div id="apiToast" class="toast bg-danger text-white" role="alert">
+
+<div class="toast-header bg-danger text-white">
+
+<strong class="me-auto">API Alert</strong>
+
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+
+</div>
+
+<div class="toast-body" id="toastBody">
+API Failure Detected
+</div>
+
+</div>
+
+</div>
+
+
 <div class="container">
 
 <h1 class="text-center mt-4">🚀 API Monitoring Dashboard</h1>
@@ -57,6 +80,31 @@
 <h2>{{ avg_time }} s</h2>
 </div>
 </div>
+</div>
+
+</div>
+
+
+<!-- API Uptime Progress Bar -->
+
+<div class="row mt-4">
+
+<div class="col-md-12">
+
+<h4>API Uptime</h4>
+
+<div class="progress">
+
+<div class="progress-bar bg-success"
+role="progressbar"
+style="width: {{ (healthy/total*100) if total>0 else 0 }}%">
+
+{{ ((healthy/total*100)|round(2)) if total>0 else 0 }} %
+
+</div>
+
+</div>
+
 </div>
 
 </div>
@@ -120,7 +168,8 @@
 <div class="col-md-6 text-center">
 
 <h4>API Health Distribution</h4>
-<div style="width:380px;margin:auto;">
+
+<div style="width:420px;margin:auto;">
 <canvas id="healthChart"></canvas>
 </div>
 
@@ -167,7 +216,7 @@ beginAtZero:true
 });
 
 
-// API Health Pie Chart
+// API Health Chart
 
 new Chart(document.getElementById("healthChart"),{
 
@@ -196,21 +245,24 @@ location.reload();
 },10000);
 
 
-// Alert System
-
-let alerts = [];
+// Toast Alert System
 
 {% for api in results %}
 {% if api.status != 200 %}
-alerts.push("{{ api.api }}");
+
+let toast = new bootstrap.Toast(document.getElementById("apiToast"));
+
+document.getElementById("toastBody").innerText =
+"⚠ API Failure Detected: {{ api.api }}";
+
+toast.show();
+
 {% endif %}
 {% endfor %}
 
-if(alerts.length > 0){
-alert("⚠ API Failure Detected:\n\n" + alerts.join("\n"));
-}
-
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
