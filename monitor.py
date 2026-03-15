@@ -8,9 +8,7 @@ DB = "data/api_logs.db"
 API_LIST = [
     "https://api.openweathermap.org/data/2.5/weather?q=London&appid=b452d4b9373592eb07f553041a7e5038",
     "https://jsonplaceholder.typicode.com/posts",
-    "https://api.github.com/users/octocat",
-    "https://randomuser.me/api/",
-"https://catfact.ninja/fact"
+    "https://api.github.com/users/octocat"
 ]
 
 def monitor_api():
@@ -44,13 +42,10 @@ def monitor_api():
 
                 risk = "LOW RISK" if status == 200 else "HIGH RISK"
 
-                cursor.execute(
-                    """
-                    INSERT INTO logs(api_url,status_code,response_time,timestamp)
-                    VALUES (?,?,?,CURRENT_TIMESTAMP)
-                    """,
-                    (url, status, response_time)
-                )
+                cursor.execute("""
+                INSERT INTO logs(api_url,status_code,response_time,timestamp)
+                VALUES (?,?,?,CURRENT_TIMESTAMP)
+                """,(url,status,response_time))
 
                 results.append({
                     "api": url.split("?")[0],
