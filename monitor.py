@@ -8,59 +8,60 @@ DB = "data/api_logs.db"
 API_LIST = [
     "https://api.openweathermap.org/data/2.5/weather?q=London&appid=b452d4b9373592eb07f553041a7e5038",
     "https://jsonplaceholder.typicode.com/posts",
-    "https://api.github.com/users/octocat"
-   
+    "https://api.github.com/users/octocat",
+    "https://randomuser.me/api/",
+"https://catfact.ninja/fact"
 ]
-
 
 def monitor_api():
 
     results = []
 
-    # open database connection once
-    conn = sqlite3.connect(DB)
-    cursor = conn.cursor()
+    try:
+        with sqlite3.connect(DB, timeout=10, check_same_thread=False) as conn:
 
-    for url in API_LIST:
+            conn.execute("PRAGMA journal_mode=WAL")
+            cursor = conn.cursor()
 
-        start = time.time()
+            for url in API_LIST:
 
-        try:
-            response = requests.get(url, timeout=5)
+                start = time.time()
 
-            status = response.status_code
-            response_time = round(time.time() - start, 3)
+                try:
+                    response = requests.get(url, timeout=5)
 
-            if status != 200:
-                send_alert(url, status)
+                    status = response.status_code
+                    response_time = round(time.time() - start, 3)
 
-        except requests.exceptions.RequestException:
+                    if status != 200:
+                        send_alert(url, status)
 
-            status = 500
-            response_time = 0
-            send_alert(url, status)
+                except requests.exceptions.RequestException:
 
-        # simple failure prediction
-        if status == 200:
-            risk = "LOW RISK"
-        else:
-            risk = "HIGH RISK"
+                    status = 500
+                    response_time = 0
+                    send_alert(url, status)
 
-        # save logs
-        cursor.execute(
-            "INSERT INTO logs(api_url,status_code,response_time) VALUES (?,?,?)",
-            (url, status, response_time)
-        )
+                risk = "LOW RISK" if status == 200 else "HIGH RISK"
 
-        # append dictionary (better for dashboard)
-        results.append({
-            "api": url.split("?")[0],
-            "status": status,
-            "response_time": response_time,
-            "risk": risk
-        })
+                cursor.execute(
+                    """
+                    INSERT INTO logs(api_url,status_code,response_time,timestamp)
+                    VALUES (?,?,?,CURRENT_TIMESTAMP)
+                    """,
+                    (url, status, response_time)
+                )
 
-    conn.commit()
-    conn.close()
+                results.append({
+                    "api": url.split("?")[0],
+                    "status": status,
+                    "response_time": response_time,
+                    "risk": risk
+                })
+
+            conn.commit()
+
+    except sqlite3.Error as e:
+        print("Database error:", e)
 
     return results

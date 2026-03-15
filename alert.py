@@ -3,7 +3,7 @@ from email.mime.text import MIMEText
 
 EMAIL = "Ashupal1507@gmail.com"
 PASSWORD = "cpsj avhl nzbd jnpy"
-TO_EMAIL = "your_email@gmail.com"
+TO_EMAIL = "ashupal112200@gmail.com"
 
 def send_alert(api, status):
 
