@@ -94,24 +94,31 @@ API-Monitoring-Platform/
 🔹 Step 1: Clone Repository
 git clone https://github.com/your-username/API-Monitoring-Platform.git
 cd API-Monitoring-Platform
+
 🔹 Step 2: Install Dependencies
 pip install flask requests jsonschema
+
 🔹 Step 3: Run Application
 python app.py
 🔹 Step 4: Open Dashboard
 http://127.0.0.1:5000
+
 📊 How It Works
 API List → Monitor → Store Logs → Analyze → Predict → Display Dashboard
 APIs are monitored using requests
+
 Response time & status are logged in SQLite
 Failure prediction logic analyzes API behavior
 Alerts are triggered on repeated failures
 Dashboard displays real-time insights
+
 🧪 Sample APIs for Testing
+
 https://jsonplaceholder.typicode.com/posts
 https://api.github.com/users/octocat
 https://official-joke-api.appspot.com/random_joke
 https://httpstat.us/500
+
 🚨 Alert System Setup (Gmail)
 Enable 2-Step Verification
 Generate App Password
