@@ -71,6 +71,7 @@ smtplib (for alerts)
 📂 Project Structure
 
 API-Monitoring-Platform/
+
 │
 ├── app.py                  # Main Flask app
 ├── monitor.py              # API monitoring logic
@@ -90,7 +91,9 @@ API-Monitoring-Platform/
 │
 └── README.md
 
+
 ⚙️ Installation & Setup
+
 🔹 Step 1: Clone Repository
 git clone https://github.com/your-username/API-Monitoring-Platform.git
 cd API-Monitoring-Platform
@@ -100,10 +103,12 @@ pip install flask requests jsonschema
 
 🔹 Step 3: Run Application
 python app.py
+
 🔹 Step 4: Open Dashboard
 http://127.0.0.1:5000
 
 📊 How It Works
+
 API List → Monitor → Store Logs → Analyze → Predict → Display Dashboard
 APIs are monitored using requests
 
@@ -123,6 +128,7 @@ https://httpstat.us/500
 Enable 2-Step Verification
 Generate App Password
 Add credentials in alert.py
+
 📈 Future Enhancements
 🔄 Real-time WebSocket updates
 🧠 Advanced ML model for prediction
@@ -130,10 +136,6 @@ Add credentials in alert.py
 📱 Mobile-friendly dashboard
 🔔 Slack/Telegram alerts
 👨‍💻 Author
-
-Ashu
-B.Tech CSE (AI & ML)
-Aspiring AI/ML Engineer 🚀
 
 ⭐ Conclusion
 
