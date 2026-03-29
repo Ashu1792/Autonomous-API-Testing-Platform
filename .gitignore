@@ -1,16 +1,14 @@
+# Ignore SQLite files
+*.db
+*.db-shm
+*.db-wal
+
 # Python cache
 __pycache__/
 *.pyc
 
-# Database
-data/api_logs.db
-
-# ML model
-models/failure_model.pkl
-
 # Environment files
 .env
 
-# OS files
-.DS_Store
-Thumbs.db
+# VS Code
+.vscode/

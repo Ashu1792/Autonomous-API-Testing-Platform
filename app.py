@@ -15,19 +15,29 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-# ---------------- DATABASE ----------------
-def get_db():
+# ---------------- DATABASES ----------------
+
+# 👉 USERS DATABASE
+def get_user_db():
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# 👉 API LOGS DATABASE
+def get_api_db():
     conn = sqlite3.connect("data/api_logs.db")
     conn.row_factory = sqlite3.Row
     return conn
 
+# ---------------- CREATE USERS TABLE ----------------
 def create_users_table():
-    conn = get_db()
+    conn = get_user_db()
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
-            password TEXT
+            password TEXT,
+            role TEXT DEFAULT 'user'
         )
     """)
     conn.close()
@@ -36,18 +46,19 @@ create_users_table()
 
 # ---------------- USER CLASS ----------------
 class User(UserMixin):
-    def __init__(self, id, username):
+    def __init__(self, id, username, role):
         self.id = id
         self.username = username
+        self.role = role
 
 @login_manager.user_loader
 def load_user(user_id):
-    conn = get_db()
+    conn = get_user_db()
     user = conn.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
     conn.close()
 
     if user:
-        return User(user["id"], user["username"])
+        return User(user["id"], user["username"], user["role"])
     return None
 
 # ---------------- REGISTER ----------------
@@ -56,14 +67,19 @@ def register():
     if request.method == "POST":
         username = request.form["username"].strip()
         password = request.form["password"].strip()
+        confirm = request.form.get("confirmPassword")
 
         if not username or not password:
             flash("All fields are required!")
             return redirect(url_for("register"))
 
+        if password != confirm:
+            flash("Passwords do not match!")
+            return redirect(url_for("register"))
+
         hashed_password = generate_password_hash(password)
 
-        conn = get_db()
+        conn = get_user_db()
         try:
             conn.execute(
                 "INSERT INTO users (username, password) VALUES (?, ?)",
@@ -86,7 +102,7 @@ def login():
         username = request.form["username"].strip()
         password = request.form["password"].strip()
 
-        conn = get_db()
+        conn = get_user_db()
         user = conn.execute(
             "SELECT * FROM users WHERE username=?",
             (username,)
@@ -94,14 +110,14 @@ def login():
         conn.close()
 
         if user and check_password_hash(user["password"], password):
-            login_user(User(user["id"], user["username"]))
+            login_user(User(user["id"], user["username"], user["role"]))
             return redirect(url_for("dashboard"))
         else:
             flash("Invalid username or password")
 
     return render_template("login.html")
 
-# ---------------- DASHBOARD (PROTECTED) ----------------
+# ---------------- DASHBOARD ----------------
 @app.route("/")
 @login_required
 def dashboard():
@@ -122,6 +138,7 @@ def dashboard():
     return render_template(
         "dashboard.html",
         user=current_user.username,
+        role=current_user.role,
         results=results,
         labels=labels,
         times=times,
@@ -132,6 +149,21 @@ def dashboard():
         avg_time=avg_time,
         risk_score=risk_score
     )
+
+# ---------------- ADMIN ONLY DELETE ----------------
+@app.route("/delete-api/<int:id>")
+@login_required
+def delete_api(id):
+
+    if current_user.role != "admin":
+        return "❌ Access Denied (Admin only)"
+
+    conn = get_api_db()
+    conn.execute("DELETE FROM logs WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("dashboard"))
 
 # ---------------- LOGOUT ----------------
 @app.route("/logout")
@@ -155,7 +187,7 @@ def chart_data():
 # ---------------- LOG FUNCTIONS ----------------
 def get_logs():
 
-    conn = get_db()
+    conn = get_api_db()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -182,7 +214,7 @@ def get_logs():
 
 def get_failures():
 
-    conn = get_db()
+    conn = get_api_db()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -198,7 +230,6 @@ def get_failures():
 
     return rows
 
-
 # ---------------- RISK SCORE ----------------
 def calculate_risk_score(results):
 
@@ -208,15 +239,12 @@ def calculate_risk_score(results):
 
         if r["status"] != 200:
             score += 40
-
         elif r["response_time"] > 1:
             score += 20
-
         elif r["response_time"] > 0.5:
             score += 10
 
     return min(score, 100)
-
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
