@@ -11,6 +11,7 @@
             background: linear-gradient(135deg, #0f172a, #020617);
             color: white;
             height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
         }
 
         .login-container {
@@ -18,29 +19,35 @@
         }
 
         .card {
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(12px);
-            border-radius: 16px;
-            box-shadow: 0 0 30px rgba(34, 211, 238, 0.15);
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(15px);
+            border-radius: 18px;
+            box-shadow: 0 0 40px rgba(34, 211, 238, 0.2);
             border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
         }
 
         h3 {
-            font-weight: bold;
-            color: gray;
+            font-weight: 600;
+            color: #e2e8f0; /* FIXED */
         }
 
         input {
             background: #020617 !important;
             border: 1px solid #334155 !important;
             color: white !important;
-            border-radius: 8px;
-            padding: 10px;
+            border-radius: 10px;
+            padding: 12px;
+            transition: 0.2s;
         }
 
         input:focus {
             border-color: #22d3ee !important;
-            box-shadow: 0 0 10px rgba(34,211,238,0.3);
+            box-shadow: 0 0 12px rgba(34,211,238,0.4);
         }
 
         input::placeholder {
@@ -48,18 +55,18 @@
         }
 
         .btn-custom {
-            background: linear-gradient(135deg, #22d3ee, #06b6d4);
+            background: linear-gradient(135deg, rgb(64, 190, 239),rgb(27, 165, 219));
             border: none;
             color: black;
             font-weight: bold;
-            border-radius: 8px;
-            padding: 10px;
+            border-radius: 10px;
+            padding: 12px;
             transition: 0.3s;
         }
 
         .btn-custom:hover {
-            transform: scale(1.03);
-            box-shadow: 0 0 15px rgba(34,211,238,0.5);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(34,211,238,0.6);
         }
 
         a {
@@ -71,18 +78,25 @@
             text-decoration: underline;
         }
 
-        #togglePassword {
-            color: #94a3b8;
-        }
-
-        #togglePassword:hover {
-            color: #22d3ee;
-        }
-
         .logo-title {
             font-size: 20px;
             font-weight: bold;
             color: #22d3ee;
+        }
+
+        .toggle-icon {
+            color: #94a3b8;
+        }
+
+        .toggle-icon:hover {
+            color: #22d3ee;
+        }
+
+        .form-control {
+            margin-bottom: 10px;
+        }
+        p{
+            color: #06b6d4;
         }
     </style>
 </head>
@@ -91,29 +105,30 @@
 
 <div class="container d-flex justify-content-center align-items-center login-container">
 
-    <div class="card p-4" style="width: 380px;">
+    <div class="card p-4" style="width: 400px;">
 
         <h5 class="text-center logo-title mb-3">
             🚀 API Monitoring Platform
         </h5>
 
-        <h3 class="text-center mb-4">Login</h3>
+        <h3 class="text-center mb-4">Welcome Back</h3>
 
         <form method="POST">
 
-            <input type="text" name="username" class="form-control mb-3" placeholder="Username" required>
+            <!-- USERNAME -->
+            <input type="text" name="username" class="form-control" placeholder="Username" required>
 
-            <!-- PASSWORD FIELD -->
-            <div class="position-relative mb-3">
+            <!-- PASSWORD -->
+            <div class="position-relative">
                 <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
 
-                <i class="bi bi-eye-slash position-absolute"
+                <i class="bi bi-eye-slash position-absolute toggle-icon"
                    id="togglePassword"
                    style="top: 50%; right: 15px; transform: translateY(-50%); cursor: pointer;">
                 </i>
             </div>
 
-            <button class="btn btn-custom w-100">Login</button>
+            <button class="btn btn-custom w-100 mt-3">Login</button>
 
         </form>
 
@@ -132,18 +147,21 @@
 
 </div>
 
-<!-- PASSWORD TOGGLE SCRIPT -->
 <script>
-const toggle = document.getElementById("togglePassword");
-const password = document.getElementById("password");
+function togglePassword(toggleId, inputId) {
+    const toggle = document.getElementById(toggleId);
+    const input = document.getElementById(inputId);
 
-toggle.addEventListener("click", function () {
-    const type = password.type === "password" ? "text" : "password";
-    password.type = type;
+    toggle.addEventListener("click", function () {
+        const type = input.type === "password" ? "text" : "password";
+        input.type = type;
 
-    this.classList.toggle("bi-eye");
-    this.classList.toggle("bi-eye-slash");
-});
+        this.classList.toggle("bi-eye");
+        this.classList.toggle("bi-eye-slash");
+    });
+}
+
+togglePassword("togglePassword", "password");
 </script>
 
 </body>
