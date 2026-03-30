@@ -1,3 +1,4 @@
+from models.train_model import train_model
 from scheduler import start_scheduler
 import sqlite3
 from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
@@ -122,6 +123,11 @@ def login():
 @login_required
 def dashboard():
 
+    # ✅ ML MODEL
+    model, accuracy = train_model()
+    accuracy = round(accuracy * 100, 2) if accuracy else 0
+
+    # ✅ MONITORING
     results = monitor_api()
     contract = validate_contract()
 
@@ -147,7 +153,8 @@ def dashboard():
         healthy=healthy,
         failed=failed,
         avg_time=avg_time,
-        risk_score=risk_score
+        risk_score=risk_score,
+        accuracy=accuracy   # ✅ VERY IMPORTANT
     )
 
 # ---------------- ADMIN ONLY DELETE ----------------

@@ -13,12 +13,10 @@ body{
     color:white;
 }
 
-/* NAVBAR */
 .navbar{
     background:#020617 !important;
 }
 
-/* CARDS */
 .card{
     background:#1e293b;
     border:none;
@@ -45,6 +43,10 @@ h1,h2,h3,h4{
     border-radius:10px;
     overflow:hidden;
 }
+
+canvas{
+    max-height:250px;
+}
 </style>
 </head>
 
@@ -55,7 +57,7 @@ h1,h2,h3,h4{
     <span class="navbar-brand text-info">🚀 API Platform</span>
 
     <div>
-        <span class="me-3">👤 {{ user }}</span>
+        <span class="me-3">👤 {{ user }} ({{ role }})</span>
         <a href="/logout" class="btn btn-sm btn-danger">Logout</a>
     </div>
 </nav>
@@ -110,24 +112,42 @@ h1,h2,h3,h4{
 </div>
 </div>
 
+<!-- ✅ MODEL ACCURACY -->
+<div class="col-md-3">
+<div class="card text-warning">
+<div class="card-body">
+<h6>Model Accuracy</h6>
+<h2>
+{% if accuracy %}
+{{ accuracy }}%
+{% else %}
+0%
+{% endif %}
+</h2>
+</div>
+</div>
 </div>
 
-<!-- MONITORING TABLE -->
+</div>
+
+<!-- TABLE -->
 <h3 class="mt-5 text-center">📡 API Monitoring</h3>
 
 <div class="card p-3">
 
 <table class="table table-dark table-striped table-hover align-middle">
 
+<thead>
 <tr>
 <th>API</th>
 <th>Status</th>
 <th>Response Time</th>
 <th>Risk</th>
 </tr>
+</thead>
 
+<tbody>
 {% for api in results %}
-
 <tr>
 <td>{{ api.api }}</td>
 
@@ -141,10 +161,9 @@ h1,h2,h3,h4{
 
 <td>{{ api.response_time }} sec</td>
 <td>{{ api.risk }}</td>
-
 </tr>
-
 {% endfor %}
+</tbody>
 
 </table>
 
@@ -175,7 +194,7 @@ h1,h2,h3,h4{
 <canvas id="latencyChart"></canvas>
 </div>
 
-<!-- AI PREDICTION -->
+<!-- AI -->
 <div class="card chart-card mt-5 text-center">
 
 <h3>🤖 AI Failure Prediction</h3>
@@ -184,8 +203,7 @@ h1,h2,h3,h4{
 <canvas id="riskGauge"></canvas>
 </div>
 
-<div class="text-center mt-3">
-<h2>{{ risk_score }}%</h2>
+<h2 class="mt-3">{{ risk_score }}%</h2>
 
 {% if risk_score < 30 %}
 <span class="badge bg-success">LOW RISK</span>
@@ -197,8 +215,6 @@ h1,h2,h3,h4{
 
 </div>
 
-</div>
-
 <!-- FAILURES -->
 <h3 class="mt-5">🚨 Recent API Failures</h3>
 
@@ -206,21 +222,23 @@ h1,h2,h3,h4{
 
 <table class="table table-dark table-bordered">
 
+<thead>
 <tr>
 <th>API</th>
 <th>Status</th>
 <th>Time</th>
 </tr>
+</thead>
 
+<tbody>
 {% for f in failures %}
-
 <tr>
 <td>{{ f[0] }}</td>
 <td style="color:red">{{ f[1] }}</td>
 <td>{{ f[2] }}</td>
 </tr>
-
 {% endfor %}
+</tbody>
 
 </table>
 
@@ -250,16 +268,16 @@ function updateChart(){
 fetch("/api/chart-data")
 .then(res=>res.json())
 .then(data=>{
-responseChart.data.labels=data.labels
-responseChart.data.datasets[0].data=data.times
-responseChart.update()
-})
+responseChart.data.labels = data.labels || [];
+responseChart.data.datasets[0].data = data.times || [];
+responseChart.update();
+});
 }
 
-setInterval(updateChart,5000)
-updateChart()
+setInterval(updateChart,5000);
+updateChart();
 
-// HEALTH PIE
+// HEALTH
 new Chart(document.getElementById("healthChart"),{
 type:"doughnut",
 data:{
@@ -269,23 +287,22 @@ data:[{{ healthy }},{{ failed }}],
 backgroundColor:["#22c55e","#ef4444"]
 }]
 }
-})
+});
 
 // LATENCY
 new Chart(document.getElementById("latencyChart"),{
 type:"bar",
 data:{
-labels: {{ results | map(attribute='api') | list | tojson }},
+labels: {{ results | map(attribute='api') | list | tojson if results else [] }},
 datasets:[{
 label:"Response Time",
-data: {{ results | map(attribute='response_time') | list | tojson }},
+data: {{ results | map(attribute='response_time') | list | tojson if results else [] }},
 backgroundColor:"#f59e0b"
 }]
 }
-})
+});
 
 // GAUGE
-const riskScore = {{ risk_score }};
 const ctx = document.getElementById("riskGauge");
 
 new Chart(ctx,{
