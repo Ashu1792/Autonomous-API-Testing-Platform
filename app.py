@@ -180,20 +180,18 @@ def add_api():
 @app.route("/delete-api/<int:id>", methods=["POST"])
 @login_required
 def delete_api(id):
+    if current_user.role != "admin":
+        flash("Not authorized")
+        return redirect("/dashboard")
+
     conn = get_db()
 
-    # get API URL first
     api = conn.execute("SELECT url FROM apis WHERE id=?", (id,)).fetchone()
 
     if api:
-        url = api["url"]
+        conn.execute("DELETE FROM logs WHERE api_url=?", (api["url"],))
 
-        # delete logs of this API
-        conn.execute("DELETE FROM logs WHERE api_url=?", (url,))
-
-    # delete API
     conn.execute("DELETE FROM apis WHERE id=?", (id,))
-    
     conn.commit()
     conn.close()
 
