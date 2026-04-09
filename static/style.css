@@ -1,59 +1,105 @@
-.dashboard-grid{
-
-display:grid;
-grid-template-columns: 1fr 1fr;
-gap:25px;
-padding:40px;
-max-width:1400px;
-margin:auto;
-
+body {
+    background: #f1f5f9;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
 }
 
-.card{
-
-background:#1e293b;
-padding:25px;
-border-radius:10px;
-box-shadow:0 0 15px rgba(0,0,0,0.4);
-
+/* CONTAINER */
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 30px;
 }
 
-.card h3{
-
-margin-bottom:20px;
-font-size:18px;
-color:#e2e8f0;
-
+/* TITLE */
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
 }
 
-.card canvas{
-
-width:100%;
-height:300px;
-
+/* ADD API */
+.add-api {
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-.wide{
-
-grid-column: span 2;
-
+input {
+    padding: 10px;
+    width: 300px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
 }
 
-.risk-text{
-
-text-align:center;
-margin-top:15px;
-font-size:20px;
-font-weight:bold;
-
+button {
+    padding: 10px 15px;
+    border: none;
+    background: #0ea5e9;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
 }
-#gauge-container{
 
-background:#1e293b;
-padding:30px;
-border-radius:12px;
-width:350px;
-margin:auto;
-box-shadow:0 0 20px rgba(0,0,0,0.4);
+button:hover {
+    background: #0284c7;
+}
 
+/* STATS */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card span {
+    font-size: 22px;
+    display: block;
+    margin-top: 10px;
+}
+
+/* CARD */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 25px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* TABLE */
+.table-card {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: #e2e8f0;
+    padding: 12px;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+tr:hover {
+    background: #f8fafc;
+}
+
+/* GRAPH */
+canvas {
+    margin-top: 20px;
 }

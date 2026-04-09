@@ -1,5 +1,6 @@
 import smtplib
 from email.mime.text import MIMEText
+import time
 
 EMAIL = "Ashupal1507@gmail.com"
 PASSWORD = "cpsj avhl nzbd jnpy"
@@ -34,3 +35,11 @@ def send_alert(api, status):
 
     except Exception as e:
         print("Email alert failed:",e)
+
+        def send_alert(api_url, status):
+            print(f"""
+🚨 ALERT TRIGGERED
+API: {api_url}
+STATUS: {status}
+TIME: {time.strftime('%H:%M:%S')}
+""")

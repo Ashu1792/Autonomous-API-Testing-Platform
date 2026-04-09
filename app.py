@@ -1,51 +1,59 @@
-from models.train_model import train_model
-from scheduler import start_scheduler
 import sqlite3
 from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-
 from monitor import monitor_api
-from contract_test import validate_contract
+import validators
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
+app.secret_key = "secret"
 
-# ---------------- LOGIN MANAGER ----------------
+# ---------------- LOGIN ----------------
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-# ---------------- DATABASES ----------------
-
-# 👉 USERS DATABASE
-def get_user_db():
-    conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row
-    return conn
-
-# 👉 API LOGS DATABASE
-def get_api_db():
+# ---------------- DB ----------------
+def get_db():
     conn = sqlite3.connect("data/api_logs.db")
     conn.row_factory = sqlite3.Row
     return conn
 
-# ---------------- CREATE USERS TABLE ----------------
-def create_users_table():
-    conn = get_user_db()
+def init_db():
+    conn = get_db()
+
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT,
-            role TEXT DEFAULT 'user'
-        )
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        role TEXT DEFAULT 'user'
+    )
     """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS apis (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT UNIQUE
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        api_url TEXT,
+        status_code INTEGER,
+        response_time REAL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    conn.commit()
     conn.close()
 
-create_users_table()
+init_db()
 
-# ---------------- USER CLASS ----------------
+# ---------------- USER ----------------
 class User(UserMixin):
     def __init__(self, id, username, role):
         self.id = id
@@ -54,207 +62,211 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    conn = get_user_db()
+    conn = get_db()
     user = conn.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
     conn.close()
 
     if user:
-        return User(user["id"], user["username"], user["role"])
+        return User(user["id"], user["username"], user["role"] if "role" in user.keys() else "user")
     return None
-
-# ---------------- REGISTER ----------------
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        username = request.form["username"].strip()
-        password = request.form["password"].strip()
-        confirm = request.form.get("confirmPassword")
-
-        if not username or not password:
-            flash("All fields are required!")
-            return redirect(url_for("register"))
-
-        if password != confirm:
-            flash("Passwords do not match!")
-            return redirect(url_for("register"))
-
-        hashed_password = generate_password_hash(password)
-
-        conn = get_user_db()
-        try:
-            conn.execute(
-                "INSERT INTO users (username, password) VALUES (?, ?)",
-                (username, hashed_password)
-            )
-            conn.commit()
-            flash("Registration successful! Please login.")
-            return redirect(url_for("login"))
-        except sqlite3.IntegrityError:
-            flash("Username already exists!")
-        finally:
-            conn.close()
-
-    return render_template("register.html")
 
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"].strip()
-        password = request.form["password"].strip()
+        username = request.form["username"]
+        password = request.form["password"]
 
-        conn = get_user_db()
-        user = conn.execute(
-            "SELECT * FROM users WHERE username=?",
-            (username,)
-        ).fetchone()
+        conn = get_db()
+        user = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
         conn.close()
 
         if user and check_password_hash(user["password"], password):
-            login_user(User(user["id"], user["username"], user["role"]))
-            return redirect(url_for("dashboard"))
+            login_user(User(user["id"], user["username"], user["role"] if "role" in user.keys() else "user"))
+            return redirect("/dashboard")
         else:
-            flash("Invalid username or password")
+            flash("Invalid credentials")
 
     return render_template("login.html")
 
-# ---------------- DASHBOARD ----------------
+# ---------------- REGISTER ----------------
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = generate_password_hash(request.form["password"])
+
+        conn = get_db()
+        try:
+            conn.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+            conn.commit()
+        except:
+            flash("User already exists")
+        conn.close()
+
+        return redirect("/login")
+
+    return render_template("register.html")
+
+# ---------------- HOME ----------------
 @app.route("/")
+def home():
+    return redirect(url_for("login"))
+
+# ---------------- DASHBOARD ----------------
+@app.route("/dashboard")
 @login_required
 def dashboard():
-
-    # ✅ ML MODEL
-    model, accuracy = train_model()
-    accuracy = round(accuracy * 100, 2) if accuracy else 0
-
-    # ✅ MONITORING
     results = monitor_api()
-    contract = validate_contract()
-
-    labels, times = get_logs()
-    failures = get_failures()
 
     total = len(results)
     healthy = len([r for r in results if r["status"] == 200])
     failed = total - healthy
 
-    avg_time = round(sum(r["response_time"] for r in results) / total, 3) if total > 0 else 0
-    risk_score = calculate_risk_score(results)
+    avg_time = round(sum(r["response_time"] for r in results) / total, 3) if total else 0
+    risk_score = int((failed / total) * 100) if total else 0
 
     return render_template(
         "dashboard.html",
         user=current_user.username,
         role=current_user.role,
         results=results,
-        labels=labels,
-        times=times,
-        failures=failures,
         total=total,
         healthy=healthy,
         failed=failed,
         avg_time=avg_time,
-        risk_score=risk_score,
-        accuracy=accuracy   # ✅ VERY IMPORTANT
+        risk_score=risk_score
     )
 
-# ---------------- ADMIN ONLY DELETE ----------------
-@app.route("/delete-api/<int:id>")
+from flask import request, redirect, flash
+import validators
+
+@app.route("/add-api", methods=["POST"])
+@login_required
+def add_api():
+    url = request.form.get("api_url")
+
+    #-------- VALIDATION-----------
+    if not url:
+        flash("URL is required")
+        return redirect("/dashboard")
+
+    if not url.startswith("http"):
+        flash("Invalid URL format (must start with http/https)")
+        return redirect("/dashboard")
+
+    if len(url) > 255:
+        flash("URL too long")
+        return redirect("/dashboard")
+
+    if not validators.url(url):
+        flash("Invalid URL")
+        return redirect("/dashboard")
+
+    conn = get_db()
+    try:
+        conn.execute("INSERT INTO apis (url) VALUES (?)", (url,))
+        conn.commit()
+        flash("API added successfully")
+    except Exception as e:
+        flash("API already exists or database error")
+    finally:
+        conn.close()
+
+    return redirect("/dashboard")
+
+#---------------- DELETE API ----------------
+
+@app.route("/delete-api/<int:id>", methods=["POST"])
 @login_required
 def delete_api(id):
+    conn = get_db()
 
-    if current_user.role != "admin":
-        return "❌ Access Denied (Admin only)"
+    # get API URL first
+    api = conn.execute("SELECT url FROM apis WHERE id=?", (id,)).fetchone()
 
-    conn = get_api_db()
-    conn.execute("DELETE FROM logs WHERE id=?", (id,))
+    if api:
+        url = api["url"]
+
+        # delete logs of this API
+        conn.execute("DELETE FROM logs WHERE api_url=?", (url,))
+
+    # delete API
+    conn.execute("DELETE FROM apis WHERE id=?", (id,))
+    
     conn.commit()
     conn.close()
 
-    return redirect(url_for("dashboard"))
+    return redirect("/dashboard")
 
 # ---------------- LOGOUT ----------------
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("login"))
+    return redirect("/login")
+#-----------api stats----------------
+@app.route("/api/stats")
+def stats():
+    conn = get_db()
 
-# ---------------- API CHART DATA ----------------
-@app.route("/api/chart-data")
-@login_required
-def chart_data():
+    # only logs of current APIs
+    rows = conn.execute("""
+        SELECT status_code FROM logs
+        WHERE api_url IN (SELECT url FROM apis)
+        ORDER BY id DESC LIMIT 20
+    """).fetchall()
 
-    labels, times = get_logs()
+    healthy = sum(1 for r in rows if r["status_code"] == 200)
+    failed = sum(1 for r in rows if r["status_code"] != 200)
+
+    total = conn.execute("SELECT COUNT(*) FROM apis").fetchone()[0]
+
+    avg = conn.execute("""
+        SELECT AVG(response_time) FROM logs
+        WHERE api_url IN (SELECT url FROM apis)
+    """).fetchone()[0] or 0
+
+    conn.close()
 
     return jsonify({
-        "labels": labels,
-        "times": times
+        "total": total,
+        "healthy": healthy,
+        "failed": failed,
+        "avg_time": round(avg, 3)
+    })
+@app.route("/api/response-times")
+def response_times():
+    conn = get_db()
+
+    rows = conn.execute("""
+        SELECT timestamp, response_time FROM logs
+        WHERE api_url IN (SELECT url FROM apis)
+        ORDER BY id DESC LIMIT 10
+    """).fetchall()
+
+    conn.close()
+
+    return jsonify({
+        "labels": [r["timestamp"][-8:] for r in rows][::-1],
+        "values": [r["response_time"] for r in rows][::-1]
     })
 
-# ---------------- LOG FUNCTIONS ----------------
-def get_logs():
+@app.route("/api/failures")
+def failures():
+    conn = get_db()
 
-    conn = get_api_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT response_time, timestamp
-        FROM logs
-        ORDER BY id DESC
-        LIMIT 10
-    """)
-
-    rows = cursor.fetchall()
-    conn.close()
-
-    rows.reverse()
-
-    labels = []
-    times = []
-
-    for r in rows:
-        times.append(r[0])
-        labels.append(r[1][-8:])
-
-    return labels, times
-
-
-def get_failures():
-
-    conn = get_api_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT api_url, status_code, timestamp
-        FROM logs
+    rows = conn.execute("""
+        SELECT api_url, timestamp FROM logs
         WHERE status_code != 200
-        ORDER BY id DESC
-        LIMIT 5
-    """)
+        AND api_url IN (SELECT url FROM apis)
+        ORDER BY id DESC LIMIT 10
+    """).fetchall()
 
-    rows = cursor.fetchall()
     conn.close()
 
-    return rows
-
-# ---------------- RISK SCORE ----------------
-def calculate_risk_score(results):
-
-    score = 0
-
-    for r in results:
-
-        if r["status"] != 200:
-            score += 40
-        elif r["response_time"] > 1:
-            score += 20
-        elif r["response_time"] > 0.5:
-            score += 10
-
-    return min(score, 100)
+    return jsonify([{"url": r["api_url"], "time": r["timestamp"]} for r in rows])
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
-
-    start_scheduler()
-   app.run(debug=True, use_reloader=True)
+    app.run(debug=True)
