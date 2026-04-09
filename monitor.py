@@ -19,25 +19,34 @@ def monitor_api():
             res = requests.get(url, timeout=5)
             response_time = round(time.time() - start, 3)
 
-            status_code = res.status_code
-            status = 200 if status_code == 200 else 500
+            status = res.status_code
 
-        except:
+            # ✅ Error classification
+            if status >= 500:
+                error_type = "Server Error"
+            elif status >= 400:
+                error_type = "Client Error"
+            else:
+                error_type = "Success"
+
+        except requests.exceptions.RequestException:
             response_time = 0
             status = 500
+            error_type = "Request Failed"
 
         # ✅ Store logs (FIXED)
         cursor.execute("""
-            INSERT INTO logs (api_url, status_code, response_time)
-            VALUES (?, ?, ?)
-        """, (url, status, response_time))
+            INSERT INTO logs (api_url, status_code, response_time, error_type)
+            VALUES (?, ?, ?, ?)
+        """, (url, status, response_time, error_type))
 
-        # Return for dashboard
+        # ✅ Return for dashboard
         results.append({
             "id": api_id,
             "api": url,
             "status": status,
             "response_time": response_time,
+            "error_type": error_type,
             "risk": "Low" if status == 200 else "High"
         })
 
