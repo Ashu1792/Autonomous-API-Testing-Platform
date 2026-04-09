@@ -213,7 +213,7 @@
                 <a href="/register">Register</a>
             </div>
 
-            {% with messages = get_flashed_messages() %}
+        {% with messages = get_flashed_messages(category_filter=["login"]) %}
             {% for msg in messages %}
             <div class="error-msg">{{ msg }}</div>
             {% endfor %}

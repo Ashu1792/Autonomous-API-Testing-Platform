@@ -1,9 +1,9 @@
 import sqlite3
-from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask import Flask, render_template, jsonify, request, redirect, flash, Response
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from monitor import monitor_api
 import validators
+from monitor import monitor_api
 
 app = Flask(__name__)
 app.secret_key = "secret"
@@ -44,6 +44,7 @@ def init_db():
         api_url TEXT,
         status_code INTEGER,
         response_time REAL,
+        error_type TEXT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
@@ -52,6 +53,15 @@ def init_db():
     conn.close()
 
 init_db()
+
+# ---------------- CLEAR OLD LOGS ----------------
+# #def clear_old_logs():
+#     conn = get_db()
+#     conn.execute("DELETE FROM logs")
+#     conn.commit()
+#     conn.close()
+
+# clear_old_logs()
 
 # ---------------- USER ----------------
 class User(UserMixin):
@@ -63,29 +73,34 @@ class User(UserMixin):
 @login_manager.user_loader
 def load_user(user_id):
     conn = get_db()
-    user = conn.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+    user = conn.execute(
+        "SELECT * FROM users WHERE id=?", (user_id,)
+    ).fetchone()
     conn.close()
 
     if user:
-        return User(user["id"], user["username"], user["role"] if "role" in user.keys() else "user")
+        role = user["role"] if "role" in user.keys() and user["role"] else "user"
+        return User(user["id"], user["username"], role)
+
     return None
 
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username")
+        password = request.form.get("password")
 
         conn = get_db()
         user = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
         conn.close()
 
         if user and check_password_hash(user["password"], password):
-            login_user(User(user["id"], user["username"], user["role"] if "role" in user.keys() else "user"))
+            role = user["role"] if "role" in user.keys() and user["role"] else "user"
+            login_user(User(user["id"], user["username"], role))
             return redirect("/dashboard")
         else:
-            flash("Invalid credentials")
+            flash("Invalid credentials","login")
 
     return render_template("login.html")
 
@@ -93,13 +108,14 @@ def login():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form["username"]
-        password = generate_password_hash(request.form["password"])
+        username = request.form.get("username")
+        password = generate_password_hash(request.form.get("password"))
 
         conn = get_db()
         try:
             conn.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
             conn.commit()
+            flash("User registered successfully")
         except:
             flash("User already exists")
         conn.close()
@@ -111,7 +127,7 @@ def register():
 # ---------------- HOME ----------------
 @app.route("/")
 def home():
-    return redirect(url_for("login"))
+    return redirect("/login")
 
 # ---------------- DASHBOARD ----------------
 @app.route("/dashboard")
@@ -128,8 +144,6 @@ def dashboard():
 
     return render_template(
         "dashboard.html",
-        user=current_user.username,
-        role=current_user.role,
         results=results,
         total=total,
         healthy=healthy,
@@ -138,21 +152,18 @@ def dashboard():
         risk_score=risk_score
     )
 
-from flask import request, redirect, flash
-import validators
-
+# ---------------- ADD API ----------------
 @app.route("/add-api", methods=["POST"])
 @login_required
 def add_api():
     url = request.form.get("api_url")
 
-    #-------- VALIDATION-----------
     if not url:
-        flash("URL is required")
+        flash("URL required")
         return redirect("/dashboard")
 
     if not url.startswith("http"):
-        flash("Invalid URL format (must start with http/https)")
+        flash("Invalid URL format")
         return redirect("/dashboard")
 
     if len(url) > 255:
@@ -167,23 +178,17 @@ def add_api():
     try:
         conn.execute("INSERT INTO apis (url) VALUES (?)", (url,))
         conn.commit()
-        flash("API added successfully")
-    except Exception as e:
-        flash("API already exists or database error")
-    finally:
-        conn.close()
+        flash("API added")
+    except:
+        flash("API already exists")
+    conn.close()
 
     return redirect("/dashboard")
 
-#---------------- DELETE API ----------------
-
+# ---------------- DELETE API ----------------
 @app.route("/delete-api/<int:id>", methods=["POST"])
 @login_required
 def delete_api(id):
-    if current_user.role != "admin":
-        flash("Not authorized")
-        return redirect("/dashboard")
-
     conn = get_db()
 
     api = conn.execute("SELECT url FROM apis WHERE id=?", (id,)).fetchone()
@@ -197,18 +202,38 @@ def delete_api(id):
 
     return redirect("/dashboard")
 
-# ---------------- LOGOUT ----------------
-@app.route("/logout")
+# ---------------- EXPORT ----------------
+@app.route("/export")
 @login_required
-def logout():
-    logout_user()
-    return redirect("/login")
-#-----------api stats----------------
+def export():
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM logs").fetchall()
+    conn.close()
+
+    data = "API,Status,Time\n"
+    for r in rows:
+        data += f"{r['api_url']},{r['status_code']},{r['response_time']}\n"
+
+    return Response(data, mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=logs.csv"})
+
+# ---------------- CLEAR LOGS ----------------
+@app.route("/clear-logs", methods=["POST"])
+@login_required
+def clear_logs():
+    conn = get_db()
+    conn.execute("DELETE FROM logs")
+    conn.commit()
+    conn.close()
+
+    flash("History cleared")
+    return redirect("/dashboard")
+
+# ---------------- API DATA ----------------
 @app.route("/api/stats")
 def stats():
     conn = get_db()
 
-    # only logs of current APIs
     rows = conn.execute("""
         SELECT status_code FROM logs
         WHERE api_url IN (SELECT url FROM apis)
@@ -233,13 +258,13 @@ def stats():
         "failed": failed,
         "avg_time": round(avg, 3)
     })
+#---------------response times for chart----------------
 @app.route("/api/response-times")
 def response_times():
     conn = get_db()
 
     rows = conn.execute("""
         SELECT timestamp, response_time FROM logs
-        WHERE api_url IN (SELECT url FROM apis)
         ORDER BY id DESC LIMIT 10
     """).fetchall()
 
@@ -250,20 +275,11 @@ def response_times():
         "values": [r["response_time"] for r in rows][::-1]
     })
 
-@app.route("/api/failures")
-def failures():
-    conn = get_db()
-
-    rows = conn.execute("""
-        SELECT api_url, timestamp FROM logs
-        WHERE status_code != 200
-        AND api_url IN (SELECT url FROM apis)
-        ORDER BY id DESC LIMIT 10
-    """).fetchall()
-
-    conn.close()
-
-    return jsonify([{"url": r["api_url"], "time": r["timestamp"]} for r in rows])
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect("/login")
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":

@@ -24,7 +24,7 @@
 
     <div class="container">
 
-        <!-- ALERT (REPLACED POPUP) -->
+        <!-- ALERT -->
         <div id="alertBox" class="alert alert-danger text-center d-none">
             ⚠️ Multiple API failures detected!
         </div>
@@ -32,12 +32,22 @@
         <!-- TITLE -->
         <h2 class="text-center mb-4 fw-bold">API Monitoring Dashboard</h2>
 
-        <!-- ADD API -->
-        <div class="d-flex justify-content-center mb-4">
+        <!-- ADD API + ACTION BUTTONS -->
+        <div class="d-flex justify-content-center align-items-center gap-3 mb-4 flex-wrap">
+
             <form method="POST" action="/add-api" class="d-flex gap-2">
                 <input type="text" name="api_url" class="form-control" placeholder="Enter API URL" required>
                 <button class="btn btn-primary">Add API</button>
             </form>
+
+            <!-- EXPORT -->
+            <a href="/export" class="btn btn-success">Export Logs</a>
+
+            <!-- CLEAR HISTORY -->
+            <form method="POST" action="/clear-logs">
+                <button class="btn btn-warning">Clear History</button>
+            </form>
+
         </div>
 
         <!-- STATS -->
@@ -199,11 +209,10 @@
 
                     document.getElementById("uptime").innerText = uptime + "%";
 
-                    // Update chart
                     healthChart.data.datasets[0].data = [d.healthy, d.failed];
                     healthChart.update();
 
-                    // PROFESSIONAL ALERT (NO POPUP)
+                    // ALERT BAR
                     if (d.failed > 5) {
                         document.getElementById("alertBox").classList.remove("d-none");
                     } else {
