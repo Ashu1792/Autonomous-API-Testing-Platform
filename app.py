@@ -257,4 +257,4 @@ def calculate_risk_score(results):
 if __name__ == "__main__":
 
     start_scheduler()
-    app.run(debug=True)
+   app.run(debug=True, use_reloader=True)
