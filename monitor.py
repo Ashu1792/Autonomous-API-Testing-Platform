@@ -4,53 +4,31 @@ import time
 
 def monitor_api():
     conn = sqlite3.connect("data/api_logs.db")
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM apis")
-    apis = cursor.fetchall()
-
-    results = []
+    apis = cursor.execute("SELECT * FROM apis").fetchall()
 
     for api in apis:
-        api_id, url = api
+        url = api["url"]
 
         try:
             start = time.time()
-            res = requests.get(url, timeout=5)
+            res = requests.get(
+                url,
+                timeout=5,
+                headers={"User-Agent": "Mozilla/5.0"}
+            )
             response_time = round(time.time() - start, 3)
-
             status = res.status_code
-
-            # ✅ Error classification
-            if status >= 500:
-                error_type = "Server Error"
-            elif status >= 400:
-                error_type = "Client Error"
-            else:
-                error_type = "Success"
-
-        except requests.exceptions.RequestException:
-            response_time = 0
+        except:
+            response_time = -1
             status = 500
-            error_type = "Request Failed"
 
-        # ✅ Store logs (FIXED)
-        cursor.execute("""
-            INSERT INTO logs (api_url, status_code, response_time, error_type)
-            VALUES (?, ?, ?, ?)
-        """, (url, status, response_time, error_type))
-
-        # ✅ Return for dashboard
-        results.append({
-            "id": api_id,
-            "api": url,
-            "status": status,
-            "response_time": response_time,
-            "error_type": error_type,
-            "risk": "Low" if status == 200 else "High"
-        })
+        cursor.execute(
+            "INSERT INTO logs (api_url, status_code, response_time) VALUES (?, ?, ?)",
+            (url, status, response_time)
+        )
 
     conn.commit()
     conn.close()
-
-    return results

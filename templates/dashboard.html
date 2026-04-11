@@ -10,11 +10,18 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            background: #f1f5f9;
+        }
+
+        .card {
+            border-radius: 12px;
+        }
+    </style>
 </head>
 
-<body class="bg-light">
+<body>
 
     <!-- NAVBAR -->
     <nav class="navbar navbar-light bg-white shadow-sm px-4 mb-3">
@@ -32,18 +39,14 @@
         <!-- TITLE -->
         <h2 class="text-center mb-4 fw-bold">API Monitoring Dashboard</h2>
 
-        <!-- ADD API + ACTION BUTTONS -->
-        <div class="d-flex justify-content-center align-items-center gap-3 mb-4 flex-wrap">
+        <!-- ADD API -->
+        <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
 
             <form method="POST" action="/add-api" class="d-flex gap-2">
                 <input type="text" name="api_url" class="form-control" placeholder="Enter API URL" required>
                 <button class="btn btn-primary">Add API</button>
             </form>
 
-            <!-- EXPORT -->
-            <a href="/export" class="btn btn-success">Export Logs</a>
-
-            <!-- CLEAR HISTORY -->
             <form method="POST" action="/clear-logs">
                 <button class="btn btn-warning">Clear History</button>
             </form>
@@ -105,6 +108,7 @@
                 <tbody>
                     {% for api in results %}
                     <tr>
+
                         <td>{{ api.api }}</td>
 
                         <td>
@@ -124,10 +128,12 @@
                         </td>
 
                         <td>
+                            <!-- ✅ DELETE FIXED -->
                             <form method="POST" action="/delete-api/{{ api.id }}">
-                                <button class="btn btn-sm btn-danger">Delete</button>
+                                <button class="btn btn-danger btn-sm">Delete</button>
                             </form>
                         </td>
+
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -153,7 +159,7 @@
 
         </div>
 
-        <!-- FAILED APIs -->
+        <!-- FAILURES -->
         <div class="card p-3 shadow-sm mt-4">
             <h5>❌ Recent Failed APIs</h5>
             <table class="table mt-3">
@@ -203,8 +209,8 @@
                     document.getElementById("failed").innerText = d.failed;
                     document.getElementById("avg").innerText = d.avg_time;
 
-                    let uptime = (d.healthy + d.failed) > 0
-                        ? ((d.healthy / (d.healthy + d.failed)) * 100).toFixed(1)
+                    let uptime = (d.total > 0)
+                        ? ((d.healthy / d.total) * 100).toFixed(1)
                         : 0;
 
                     document.getElementById("uptime").innerText = uptime + "%";
@@ -212,7 +218,6 @@
                     healthChart.data.datasets[0].data = [d.healthy, d.failed];
                     healthChart.update();
 
-                    // ALERT BAR
                     if (d.failed > 5) {
                         document.getElementById("alertBox").classList.remove("d-none");
                     } else {
@@ -243,14 +248,12 @@
                 });
         }
 
-        // AUTO REFRESH
         setInterval(() => {
             loadStats();
             loadGraph();
             loadFailures();
         }, 4000);
 
-        // INITIAL LOAD
         loadStats();
         loadGraph();
         loadFailures();
