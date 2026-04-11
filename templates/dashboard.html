@@ -159,106 +159,162 @@
 
         </div>
 
-        <!-- FAILURES -->
-        <div class="card p-3 shadow-sm mt-4">
-            <h5>❌ Recent Failed APIs</h5>
-            <table class="table mt-3">
-                <thead class="table-light">
-                    <tr>
-                        <th>API</th>
-                        <th>Time</th>
-                    </tr>
-                </thead>
-                <tbody id="failTable"></tbody>
-            </table>
+    <div class="row mt-4">
+    
+        <!-- UPTIME -->
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm h-100">
+                <h5>📊 Per API Uptime</h5>
+    
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>API</th>
+                            <th>Uptime %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="uptimeTable"></tbody>
+                </table>
+            </div>
         </div>
-
+    
+        <!-- FAILURES -->
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm h-100">
+                <h5>❌ Recent Failed APIs</h5>
+    
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>API</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="failTable"></tbody>
+                </table>
+            </div>
+        </div>
+    
     </div>
+        
+        
 
-    <script>
-        const chart = new Chart(document.getElementById("chart"), {
-            type: "line",
-            data: {
-                labels: [],
-                datasets: [{
-                    label: "Response Time",
-                    data: [],
-                    borderWidth: 2,
-                    tension: 0.3
-                }]
-            }
-        });
 
-        const healthChart = new Chart(document.getElementById("healthChart"), {
-            type: "doughnut",
-            data: {
-                labels: ["Healthy", "Failed"],
-                datasets: [{
-                    data: [0, 0],
-                    backgroundColor: ["#22c55e", "#ef4444"]
-                }]
-            }
-        });
-
-        function loadStats() {
-            fetch("/api/stats")
-                .then(r => r.json())
-                .then(d => {
-                    document.getElementById("total").innerText = d.total;
-                    document.getElementById("healthy").innerText = d.healthy;
-                    document.getElementById("failed").innerText = d.failed;
-                    document.getElementById("avg").innerText = d.avg_time;
-
-                    let uptime = (d.total > 0)
-                        ? ((d.healthy / d.total) * 100).toFixed(1)
-                        : 0;
-
-                    document.getElementById("uptime").innerText = uptime + "%";
-
-                    healthChart.data.datasets[0].data = [d.healthy, d.failed];
-                    healthChart.update();
-
-                    if (d.failed > 5) {
-                        document.getElementById("alertBox").classList.remove("d-none");
-                    } else {
-                        document.getElementById("alertBox").classList.add("d-none");
-                    }
-                });
+   <script>
+    const chart = new Chart(document.getElementById("chart"), {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [{
+                label: "Response Time",
+                data: [],
+                borderWidth: 2,
+                tension: 0.3
+            }]
         }
+    });
 
-        function loadGraph() {
-            fetch("/api/response-times")
-                .then(r => r.json())
-                .then(d => {
-                    chart.data.labels = d.labels;
-                    chart.data.datasets[0].data = d.values;
-                    chart.update();
-                });
+    const healthChart = new Chart(document.getElementById("healthChart"), {
+        type: "doughnut",
+        data: {
+            labels: ["Healthy", "Failed"],
+            datasets: [{
+                data: [0, 0],
+                backgroundColor: ["#22c55e", "#ef4444"]
+            }]
         }
+    });
 
-        function loadFailures() {
-            fetch("/api/failures")
-                .then(r => r.json())
-                .then(d => {
-                    let html = "";
-                    d.forEach(f => {
-                        html += `<tr><td>${f.url}</td><td>${f.time}</td></tr>`;
-                    });
-                    document.getElementById("failTable").innerHTML = html;
+    // ✅ FIXED loadStats
+    function loadStats() {
+        fetch("/api/stats")
+            .then(r => r.json())
+            .then(d => {
+                document.getElementById("total").innerText = d.total;
+                document.getElementById("healthy").innerText = d.healthy;
+                document.getElementById("failed").innerText = d.failed;
+                document.getElementById("avg").innerText = d.avg_time;
+
+                let uptimeEl = document.getElementById("uptime");
+                uptimeEl.innerText = d.uptime + "%";
+
+                if (d.uptime > 95) {
+                    uptimeEl.style.color = "green";
+                } else if (d.uptime > 80) {
+                    uptimeEl.style.color = "orange";
+                } else {
+                    uptimeEl.style.color = "red";
+                }
+
+                healthChart.data.datasets[0].data = [d.healthy, d.failed];
+                healthChart.update();
+
+                if (d.failed > 5) {
+                    document.getElementById("alertBox").classList.remove("d-none");
+                } else {
+                    document.getElementById("alertBox").classList.add("d-none");
+                }
+            });
+    }
+
+    // ✅ GRAPH
+    function loadGraph() {
+        fetch("/api/response-times")
+            .then(r => r.json())
+            .then(d => {
+                chart.data.labels = d.labels;
+                chart.data.datasets[0].data = d.values;
+                chart.update();
+            });
+    }
+
+    // ✅ FAILURES
+    function loadFailures() {
+        fetch("/api/failures")
+            .then(r => r.json())
+            .then(d => {
+                let html = "";
+                d.forEach(f => {
+                    html += `<tr><td>${f.url}</td><td>${f.time}</td></tr>`;
                 });
-        }
+                document.getElementById("failTable").innerHTML = html;
+            });
+    }
 
-        setInterval(() => {
-            loadStats();
-            loadGraph();
-            loadFailures();
-        }, 4000);
+    // ✅ UPTIME PER API
+    function loadUptime() {
+        fetch("/api/uptime-per-api")
+            .then(r => r.json())
+            .then(data => {
+                let html = "";
 
+                data.forEach(api => {
+                    html += `
+                    <tr>
+                        <td>${api.api}</td>
+                        <td>${api.uptime}%</td>
+                    </tr>
+                `;
+                });
+
+                document.getElementById("uptimeTable").innerHTML = html;
+            });
+    }
+
+    // ✅ SINGLE INTERVAL ONLY
+    setInterval(() => {
         loadStats();
         loadGraph();
         loadFailures();
-    </script>
+        loadUptime();
+    }, 4000);
 
+    // ✅ INITIAL LOAD
+    loadStats();
+    loadGraph();
+    loadFailures();
+    loadUptime();
+</script>
 </body>
 
 </html>

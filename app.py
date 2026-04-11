@@ -125,26 +125,38 @@ def stats():
     rows = conn.execute("""
         SELECT api_url, status_code
         FROM logs
+    """).fetchall()
+
+    total_logs = len(rows)
+    success_logs = sum(1 for r in rows if r["status_code"] == 200)
+
+    # ✅ UPTIME %
+    uptime = (success_logs / total_logs * 100) if total_logs > 0 else 0
+
+    # ✅ Latest status per API (for stats)
+    latest = conn.execute("""
+        SELECT api_url, status_code
+        FROM logs
         WHERE id IN (
             SELECT MAX(id) FROM logs GROUP BY api_url
         )
     """).fetchall()
 
-    total = len(rows)
-    healthy = sum(1 for r in rows if r["status_code"] == 200)
+    total = len(latest)
+    healthy = sum(1 for r in latest if r["status_code"] == 200)
     failed = total - healthy
 
     avg = conn.execute("SELECT AVG(response_time) as avg FROM logs").fetchone()["avg"] or 0
 
     conn.close()
 
-    return jsonify({
+    return {
         "total": total,
         "healthy": healthy,
         "failed": failed,
-        "avg_time": round(avg, 3)
-    })
-
+        "avg_time": round(avg, 3),
+        "uptime": round(uptime, 2)   # ✅ NEW
+    }
 
 # ---------------- GRAPH ----------------
 @app.route("/api/response-times")
@@ -183,6 +195,36 @@ def failures():
         {"url": r["api_url"], "time": r["timestamp"]}
         for r in rows
     ])
+
+#----------------- UPTIME PER API ----------------
+@app.route("/api/uptime-per-api")
+def uptime_per_api():
+    conn = get_db()
+
+    rows = conn.execute("""
+        SELECT api_url,
+               COUNT(*) as total,
+               SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) as success
+        FROM logs
+        GROUP BY api_url
+    """).fetchall()
+
+    result = []
+
+    for r in rows:
+        total = r["total"]
+        success = r["success"] or 0
+
+        uptime = (success / total * 100) if total > 0 else 0
+
+        result.append({
+            "api": r["api_url"],
+            "uptime": round(uptime, 2)
+        })
+
+    conn.close()
+
+    return result
 
 
 if __name__ == "__main__":
