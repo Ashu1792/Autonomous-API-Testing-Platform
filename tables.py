@@ -15,11 +15,11 @@ CREATE TABLE IF NOT EXISTS apis (
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    api_id INTEGER,
-    status TEXT,
+    api_url TEXT,
+    status_code INTEGER,
     response_time REAL,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(api_id) REFERENCES apis(id)
+    error_type TEXT
 )
 """)
 

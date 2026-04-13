@@ -1,11 +1,30 @@
-function loadGraph() {
-    fetch("/api/response-times")
-    .then(res => res.json())
-    .then(data => {
-        chart.data.labels = data.labels;
-        chart.data.datasets[0].data = data.values;
-        chart.update();
-    });
-}
+// RESPONSE TIME CHART (LINE)
+const ctx = document.getElementById('responseChart').getContext('2d');
 
-setInterval(loadGraph, 5000);
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Response Time',
+            data: [],
+            borderWidth: 2,
+            tension: 0.4,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,   // ✅ IMPORTANT FIX
+        plugins: {
+            legend: {
+                display: true
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
