@@ -4,258 +4,65 @@
 <head>
     <title>API Monitoring Dashboard</title>
 
-    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-       /* ===== ROOT COLORS ===== */
-:root {
-    --bg: #f0f9ff;
-    --card: #ffffff;
-    --primary: #0ea5e9;
-    --primary-dark: #0284c7;
-    --accent: #16a34a;
-    --danger: #ef4444;
-    --text: #0f172a;
-    --border: #e2e8f0;
-}
+        :root {
+            --bg: #f0f9ff;
+            --card: #ffffff;
+            --primary: #0ea5e9;
+            --accent: #16a34a;
+            --danger: #ef4444;
+            --text: #0f172a;
+            --border: #e2e8f0;
+        }
 
-/* ===== BODY ===== */
-body {
-    margin: 0;
-    font-family: 'Poppins', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-}
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
 
-/* ===== NAVBAR ===== */
-.navbar {
-    background: var(--card) !important;
-    border-bottom: 1px solid var(--border);
-}
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
 
-/* ===== CARD ===== */
-.card {
-    background: var(--card);
-    border-radius: 14px;
-    padding: 20px;
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    transition: all 0.25s ease;
-}
-
-/* Hover effect */
-.card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 18px rgba(0,0,0,0.08);
-}
-
-/* ===== BUTTON ===== */
-.btn-primary {
-    background: var(--primary);
-    border: none;
-    color: white;
-    border-radius: 8px;
-    transition: 0.2s;
-}
-
-.btn-primary:hover {
-    background: var(--primary-dark);
-    transform: scale(1.03);
-}
-
-/* ===== INPUT ===== */
-input.form-control {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-}
-
-input.form-control:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(14,165,233,0.2);
-}
-
-/* ===== TABLE ===== */
-.table {
-    color: var(--text);
-}
-
-.table thead {
-    background: #e0f2fe;
-}
-
-.table tr {
-    transition: 0.2s;
-}
-
-.table tr:hover {
-    background: #f0f9ff;
-}
-
-/* ===== BADGES ===== */
-.badge.bg-success {
-    background: var(--accent) !important;
-}
-
-.badge.bg-danger {
-    background: var(--danger) !important;
-}
-
-/* ===== ALERT ===== */
-.alert {
-    border-radius: 10px;
-    animation: fadeIn 0.5s ease;
-}
-
-/* ===== CHARTS ===== */
-.chart-box {
-    height: 280px;
-    width: 100%;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 15px;
-}
-
-.chart-container {
-    height: 100%;
-    width: 100%;
-}
-
-canvas {
-    max-width: 100% !important;
-    max-height: 100% !important;
-}
-
-/* ===== TEXT COLORS ===== */
-.text-success {
-    color: var(--accent) !important;
-}
-
-.text-danger {
-    color: var(--danger) !important;
-}
-
-/* ===== ANIMATIONS ===== */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.card, .table, .chart-box {
-    animation: fadeIn 0.4s ease-in-out;
-}
-
-/* ===== MOBILE ===== */
-@media(max-width:768px) {
-    .chart-box {
-        height: 240px;
-    }
-}
-
-
+        .chart-container {
+            height: 280px;
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-light bg-white shadow-sm px-4 mb-3">
-        <span class="navbar-brand fw-bold">🚀 API Monitor</span>
+    <nav class="navbar bg-white shadow-sm px-4 mb-3">
+        <span class="fw-bold">🚀 API Monitor</span>
         <a href="/logout" class="btn btn-danger btn-sm">Logout</a>
     </nav>
 
     <div class="container">
 
-        <!-- ALERT -->
-        <div id="alertBox" class="alert alert-danger text-center d-none">
-            ⚠️ Multiple API failures detected!
-        </div>
-
-        <!-- TITLE -->
-        <h2 class="text-center mb-4 fw-bold">API Monitoring Dashboard</h2>
-
-        <!-- ADD API -->
-        <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
-
-            <form method="POST" action="/add-api" class="d-flex gap-2">
-                <input type="text" name="api_url" class="form-control" placeholder="Enter API URL" required>
-                <button class="btn btn-primary">Add API</button>
-            </form>
-
-            <form method="POST" action="/clear-logs">
-                <button class="btn btn-warning">Clear History</button>
-            </form>
-
-        </div>
-
-        <!-- STATS -->
-        <div class="row text-center g-3 mb-4">
-
-            <div class="col-md-3">
-                <div class="card p-3 shadow-sm">
-                    <h6>Total APIs</h6>
-                    <h3 id="total">0</h3>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card p-3 shadow-sm">
-                    <h6 class="text-success">Healthy</h6>
-                    <h3 id="healthy">0</h3>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card p-3 shadow-sm">
-                    <h6 class="text-danger">Failed</h6>
-                    <h3 id="failed">0</h3>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card p-3 shadow-sm">
-                    <h6>Avg Time</h6>
-                    <h3 id="avg">0</h3>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- UPTIME -->
-        <div class="text-center mb-4">
-            <h5>Uptime: <span id="uptime">0%</span></h5>
-        </div>
+        <h2 class="text-center mb-4">Dashboard</h2>
 
         <!-- TABLE -->
-        <div class="card p-3 shadow-sm mb-4">
-            <h5>📡 API Status</h5>
-
-            <table class="table table-hover mt-3">
-                <thead class="table-light">
+        <div class="card mb-4">
+            <h5>API Status</h5>
+            <table class="table mt-3">
+                <thead>
                     <tr>
                         <th>API</th>
                         <th>Status</th>
                         <th>Time</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
-
                 <tbody>
                     {% for api in results %}
                     <tr>
-
                         <td>{{ api.api }}</td>
-
                         <td>
                             {% if api.status == 200 %}
                             <span class="badge bg-success">Healthy</span>
@@ -263,22 +70,7 @@ canvas {
                             <span class="badge bg-danger">Failed</span>
                             {% endif %}
                         </td>
-
-                        <td>
-                            {% if api.response_time > 1 %}
-                            <span class="text-warning fw-bold">{{ api.response_time }}</span>
-                            {% else %}
-                            {{ api.response_time }}
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            <!-- ✅ DELETE FIXED -->
-                            <form method="POST" action="/delete-api/{{ api.id }}">
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </form>
-                        </td>
-
+                        <td>{{ api.response_time }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -286,57 +78,42 @@ canvas {
         </div>
 
         <!-- CHARTS -->
-        <div class="row g-4">
-
+        <div class="row">
             <div class="col-md-6">
-                <div class="card p-3 shadow-sm">
-                    <h5>📈 Response Time</h5>
-                    <canvas id="chart"></canvas>
+                <div class="card">
+                    <h5>Response Time</h5>
+                    <div class="chart-container">
+                        <canvas id="chart"></canvas>
+                    </div>
                 </div>
             </div>
 
             <div class="col-md-6">
-                <div class="card p-3 shadow-sm">
-                    <h5>📊 Health Distribution</h5>
-                <div class="chart-container">
-                    <canvas id="healthChart"></canvas>
-                </div>
+                <div class="card">
+                    <h5>Health</h5>
+                    <div class="chart-container">
+                        <canvas id="healthChart"></canvas>
+                    </div>
                 </div>
             </div>
-
         </div>
 
+        <!-- EXTRA -->
         <div class="row mt-4">
 
-            <!-- UPTIME -->
             <div class="col-md-6">
-                <div class="card p-3 shadow-sm h-100">
-                    <h5>📊 Per API Uptime</h5>
-
+                <div class="card">
+                    <h5>Uptime</h5>
                     <table class="table">
-                        <thead>
-                            <tr>
-                                <th>API</th>
-                                <th>Uptime %</th>
-                            </tr>
-                        </thead>
                         <tbody id="uptimeTable"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- FAILURES -->
             <div class="col-md-6">
-                <div class="card p-3 shadow-sm h-100">
-                    <h5>❌ Recent Failed APIs</h5>
-
+                <div class="card">
+                    <h5>Failures</h5>
                     <table class="table">
-                        <thead>
-                            <tr>
-                                <th>API</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
                         <tbody id="failTable"></tbody>
                     </table>
                 </div>
@@ -344,124 +121,77 @@ canvas {
 
         </div>
 
+    </div>
 
+    <script>
+        const chart = new Chart(document.getElementById("chart"), {
+            type: "line",
+            data: { labels: [], datasets: [{ data: [] }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
 
+        const healthChart = new Chart(document.getElementById("healthChart"), {
+            type: "doughnut",
+            data: { labels: ["Healthy", "Failed"], datasets: [{ data: [0, 0] }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
 
-        <script>
-            const chart = new Chart(document.getElementById("chart"), {
-                type: "line",
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: "Response Time",
-                        data: [],
-                        borderWidth: 2,
-                        tension: 0.3
-                    }]
-                }
-            });
+        function loadStats() {
+            fetch("/api/stats")
+                .then(r => r.json())
+                .then(d => {
+                    healthChart.data.datasets[0].data = [d.healthy, d.failed];
+                    healthChart.update();
+                });
+        }
 
-            const healthChart = new Chart(document.getElementById("healthChart"), {
-                type: "doughnut",
-                data: {
-                    labels: ["Healthy", "Failed"],
-                    datasets: [{
-                        data: [0, 0],
-                        backgroundColor: ["#22c55e", "#ef4444"]
-                    }]
-                }
-            });
+        function loadGraph() {
+            fetch("/api/response-times")
+                .then(r => r.json())
+                .then(d => {
+                    chart.data.labels = d.labels;
+                    chart.data.datasets[0].data = d.values;
+                    chart.update();
+                });
+        }
 
-            // ✅ FIXED loadStats
-            function loadStats() {
-                fetch("/api/stats")
-                    .then(r => r.json())
-                    .then(d => {
-                        document.getElementById("total").innerText = d.total;
-                        document.getElementById("healthy").innerText = d.healthy;
-                        document.getElementById("failed").innerText = d.failed;
-                        document.getElementById("avg").innerText = d.avg_time;
-
-                        let uptimeEl = document.getElementById("uptime");
-                        uptimeEl.innerText = d.uptime + "%";
-
-                        if (d.uptime > 95) {
-                            uptimeEl.style.color = "green";
-                        } else if (d.uptime > 80) {
-                            uptimeEl.style.color = "orange";
-                        } else {
-                            uptimeEl.style.color = "red";
-                        }
-
-                        healthChart.data.datasets[0].data = [d.healthy, d.failed];
-                        healthChart.update();
-
-                        if (d.failed > 5) {
-                            document.getElementById("alertBox").classList.remove("d-none");
-                        } else {
-                            document.getElementById("alertBox").classList.add("d-none");
-                        }
+        function loadFailures() {
+            fetch("/api/failures")
+                .then(r => r.json())
+                .then(d => {
+                    let html = "";
+                    d.forEach(f => {
+                        html += `<tr><td>${f.url}</td><td>${f.time}</td></tr>`;
                     });
-            }
+                    document.getElementById("failTable").innerHTML = html;
+                });
+        }
 
-            // ✅ GRAPH
-            function loadGraph() {
-                fetch("/api/response-times")
-                    .then(r => r.json())
-                    .then(d => {
-                        chart.data.labels = d.labels;
-                        chart.data.datasets[0].data = d.values;
-                        chart.update();
+        function loadUptime() {
+            fetch("/api/uptime-per-api")
+                .then(r => r.json())
+                .then(data => {
+                    let html = "";
+                    data.forEach(api => {
+                        html += `<tr><td>${api.api}</td><td>${api.uptime}%</td></tr>`;
                     });
-            }
+                    document.getElementById("uptimeTable").innerHTML = html;
+                });
+        }
 
-            // ✅ FAILURES
-            function loadFailures() {
-                fetch("/api/failures")
-                    .then(r => r.json())
-                    .then(d => {
-                        let html = "";
-                        d.forEach(f => {
-                            html += `<tr><td>${f.url}</td><td>${f.time}</td></tr>`;
-                        });
-                        document.getElementById("failTable").innerHTML = html;
-                    });
-            }
-
-            // ✅ UPTIME PER API
-            function loadUptime() {
-                fetch("/api/uptime-per-api")
-                    .then(r => r.json())
-                    .then(data => {
-                        let html = "";
-
-                        data.forEach(api => {
-                            html += `
-                    <tr>
-                        <td>${api.api}</td>
-                        <td>${api.uptime}%</td>
-                    </tr>
-                `;
-                        });
-
-                        document.getElementById("uptimeTable").innerHTML = html;
-                    });
-            }
-
-            // ✅ SINGLE INTERVAL ONLY
-            setInterval(() => {
-                loadStats();
-                loadGraph();
-                loadFailures();
-                loadUptime();
-            }, 4000);
-
-            // ✅ INITIAL LOAD
+        setInterval(() => {
             loadStats();
             loadGraph();
             loadFailures();
             loadUptime();
-        </script>
+        }, 4000);
+
+        loadStats();
+        loadGraph();
+        loadFailures();
+        loadUptime();
+    </script>
+
 </body>
 
 </html>

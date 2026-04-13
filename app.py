@@ -1,200 +1,192 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
 import sqlite3
-import requests
-import time
-import threading
+from flask import Flask, render_template, jsonify, request, redirect, flash, Response
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
+import validators
+from monitor import monitor_api
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+app.secret_key = "secret"
 
 DB = "data/api_logs.db"
 
 # ---------------- DB ----------------
 def get_db():
-    conn = sqlite3.connect(DB, timeout=10, check_same_thread=False)
+    conn = sqlite3.connect("data/api_logs.db")
     conn.row_factory = sqlite3.Row
     return conn
 
-
-# ---------------- LOGIN REQUIRED ----------------
-def login_required(func):
-    def wrapper(*args, **kwargs):
-        if "user_id" not in session:
-            return redirect("/login")
-        return func(*args, **kwargs)
-    wrapper.__name__ = func.__name__
-    return wrapper
-
-
-# ---------------- MONITOR ----------------
-def monitor_api():
+def init_db():
     conn = get_db()
-    cursor = conn.cursor()
 
-    apis = cursor.execute("SELECT * FROM apis").fetchall()
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        role TEXT DEFAULT 'user'
+    )
+    """)
 
-    for api in apis:
-        url = api["url"]
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS apis (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT UNIQUE
+    )
+    """)
 
-        try:
-            start = time.time()
-            res = requests.get(url, timeout=5)
-            response_time = round(time.time() - start, 3)
-            status = res.status_code
-        except:
-            response_time = -1
-            status = 500
-
-        cursor.execute(
-            "INSERT INTO logs (api_url, status_code, response_time) VALUES (?, ?, ?)",
-            (url, status, response_time)
-        )
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        api_url TEXT,
+        status_code INTEGER,
+        response_time REAL,
+        error_type TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
     conn.commit()
     conn.close()
 
+init_db()
 
-def background_monitor():
-    while True:
-        monitor_api()
-        time.sleep(10)
+# ---------------- CLEAR OLD LOGS ----------------
+# #def clear_old_logs():
+#     conn = get_db()
+#     conn.execute("DELETE FROM logs")
+#     conn.commit()
+#     conn.close()
 
+# clear_old_logs()
 
-threading.Thread(target=background_monitor, daemon=True).start()
+# ---------------- USER ----------------
+class User(UserMixin):
+    def __init__(self, id, username, role):
+        self.id = id
+        self.username = username
+        self.role = role
 
+@login_manager.user_loader
+def load_user(user_id):
+    conn = get_db()
+    user = conn.execute(
+        "SELECT * FROM users WHERE id=?", (user_id,)
+    ).fetchone()
+    conn.close()
 
-# ---------------- AUTH ----------------
+    if user:
+        role = user["role"] if "role" in user.keys() and user["role"] else "user"
+        return User(user["id"], user["username"], role)
+
+    return None
+
+# ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username")
+        password = request.form.get("password")
 
         conn = get_db()
         user = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
         conn.close()
 
         if user and check_password_hash(user["password"], password):
-            session["user_id"] = user["id"]
-            flash("Login successful!", "success")
+            role = user["role"] if "role" in user.keys() and user["role"] else "user"
+            login_user(User(user["id"], user["username"], role))
             return redirect("/dashboard")
         else:
-            flash("Invalid credentials!", "danger")
+            flash("Invalid credentials","login")
 
     return render_template("login.html")
 
-
-# ✅ FIXED SIGNUP (ONLY ONE FUNCTION)
-@app.route("/signup", methods=["GET", "POST"])
+# ---------------- REGISTER ----------------
 @app.route("/register", methods=["GET", "POST"])
-def signup():
+def register():
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
-
-        if not username or not password:
-            flash("All fields are required!", "danger")
-            return redirect("/signup")
-
-        if len(password) < 4:
-            flash("Password must be at least 4 characters!", "warning")
-            return redirect("/signup")
-
-        hashed_password = generate_password_hash(password)
+        username = request.form.get("username")
+        password = generate_password_hash(request.form.get("password"))
 
         conn = get_db()
-        cursor = conn.cursor()
-
-        existing = cursor.execute(
-            "SELECT id FROM users WHERE username=?",
-            (username,)
-        ).fetchone()
-
-        if existing:
-            conn.close()
-            flash("User already exists!", "warning")
-            return redirect("/signup")
-
-        cursor.execute(
-            "INSERT INTO users (username, password) VALUES (?, ?)",
-            (username, hashed_password)
-        )
-
-        conn.commit()
+        try:
+            conn.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+            conn.commit()
+            flash("User registered successfully")
+        except:
+            flash("User already exists")
         conn.close()
 
-        flash("Signup successful! Please login.", "success")
         return redirect("/login")
 
-    return render_template("signup.html")
+    return render_template("register.html")
 
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    flash("Logged out successfully!", "info")
+# ---------------- HOME ----------------
+@app.route("/")
+def home():
     return redirect("/login")
 
 
 # ---------------- DASHBOARD ----------------
 @app.route("/")
 @app.route("/dashboard")
-@login_required
 def dashboard():
-    conn = get_db()
+    results = monitor_api()
 
-    rows = conn.execute("""
-        SELECT a.id, a.url as api_url, l.status_code, l.response_time
-        FROM apis a
-        LEFT JOIN logs l ON a.url = l.api_url
-        WHERE l.id IN (
-            SELECT MAX(id) FROM logs GROUP BY api_url
-        )
-    """).fetchall()
+    total = len(results)
+    healthy = len([r for r in results if r["status"] == 200])
+    failed = total - healthy
 
-    results = [
-        {
-            "id": r["id"],
-            "api": r["api_url"],
-            "status": r["status_code"],
-            "response_time": r["response_time"]
-        }
-        for r in rows
-    ]
+    avg_time = round(sum(r["response_time"] for r in results) / total, 3) if total else 0
+    risk_score = int((failed / total) * 100) if total else 0
 
-    conn.close()
-    return render_template("dashboard.html", results=results)
-
+    return render_template(
+        "dashboard.html",
+        results=results,
+        total=total,
+        healthy=healthy,
+        failed=failed,
+        avg_time=avg_time,
+        risk_score=risk_score
+    )
 
 # ---------------- ADD API ----------------
 @app.route("/add-api", methods=["POST"])
-@login_required
 def add_api():
-    url = request.form["api_url"]
+    url = request.form.get("api_url")
 
-    conn = get_db()
-    cursor = conn.cursor()
-
-    existing = cursor.execute("SELECT * FROM apis WHERE url=?", (url,)).fetchone()
-
-    if existing:
-        conn.close()
-        flash("API already exists!", "warning")
+    if not url:
+        flash("URL required")
         return redirect("/dashboard")
 
-    cursor.execute("INSERT INTO apis (url) VALUES (?)", (url,))
-    conn.commit()
+    if not url.startswith("http"):
+        flash("Invalid URL format")
+        return redirect("/dashboard")
+
+    if len(url) > 255:
+        flash("URL too long")
+        return redirect("/dashboard")
+
+    if not validators.url(url):
+        flash("Invalid URL")
+        return redirect("/dashboard")
+
+    conn = get_db()
+    try:
+        conn.execute("INSERT INTO apis (url) VALUES (?)", (url,))
+        conn.commit()
+        flash("API added")
+    except:
+        flash("API already exists")
     conn.close()
 
-    flash("API added successfully!", "success")
     return redirect("/dashboard")
 
 
 # ---------------- DELETE API ----------------
 @app.route("/delete-api/<int:id>", methods=["POST"])
-@login_required
 def delete_api(id):
+
     conn = get_db()
 
     conn.execute("DELETE FROM apis WHERE id=?", (id,))
@@ -203,65 +195,65 @@ def delete_api(id):
     conn.commit()
     conn.close()
 
-    flash("API deleted!", "info")
     return redirect("/dashboard")
 
+# ---------------- EXPORT ----------------
+@app.route("/export")
+@login_required
+def export():
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM logs").fetchall()
+    conn.close()
+
+    data = "API,Status,Time\n"
+    for r in rows:
+        data += f"{r['api_url']},{r['status_code']},{r['response_time']}\n"
+
+    return Response(data, mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=logs.csv"})
 
 # ---------------- CLEAR LOGS ----------------
 @app.route("/clear-logs", methods=["POST"])
-@login_required
 def clear_logs():
     conn = get_db()
     conn.execute("DELETE FROM logs")
     conn.commit()
     conn.close()
+    return redirect(url_for("dashboard"))
 
-    flash("Logs cleared!", "warning")
+    flash("History cleared")
     return redirect("/dashboard")
 
-
-# ---------------- STATS ----------------
+# ---------------- API DATA ----------------
 @app.route("/api/stats")
 @login_required
 def stats():
     conn = get_db()
 
-    rows = conn.execute("SELECT api_url, status_code FROM logs").fetchall()
-
-    total_logs = len(rows)
-    success_logs = sum(1 for r in rows if r["status_code"] == 200)
-
-    uptime = (success_logs / total_logs * 100) if total_logs > 0 else 0
-
-    latest = conn.execute("""
-        SELECT api_url, status_code
-        FROM logs
-        WHERE id IN (
-            SELECT MAX(id) FROM logs GROUP BY api_url
-        )
+    rows = conn.execute("""
+        SELECT status_code FROM logs
+        WHERE api_url IN (SELECT url FROM apis)
+        ORDER BY id DESC LIMIT 20
     """).fetchall()
 
-    total = len(latest)
-    healthy = sum(1 for r in latest if r["status_code"] == 200)
-    failed = total - healthy
+    healthy = sum(1 for r in rows if r["status_code"] == 200)
+    failed = sum(1 for r in rows if r["status_code"] != 200)
+
+    total = conn.execute("SELECT COUNT(*) FROM apis").fetchone()[0]
 
     avg = conn.execute("SELECT AVG(response_time) as avg FROM logs").fetchone()["avg"] or 0
 
     conn.close()
 
-    return jsonify({
+    return {
         "total": total,
         "healthy": healthy,
         "failed": failed,
-        "avg_time": round(avg, 3),
-        "uptime": round(uptime, 2)
+        "avg_time": round(avg, 3)
     })
-
-
-# ---------------- GRAPH ----------------
+#---------------response times for chart----------------
 @app.route("/api/response-times")
-@login_required
-def graph():
+def response_times():
     conn = get_db()
 
     rows = conn.execute("""
@@ -270,65 +262,19 @@ def graph():
         ORDER BY id DESC LIMIT 10
     """).fetchall()
 
-    labels = [r["timestamp"][-8:] for r in rows][::-1]
-    values = [r["response_time"] for r in rows][::-1]
-
     conn.close()
 
-    return jsonify({"labels": labels, "values": values})
+    return jsonify({
+        "labels": [r["timestamp"][-8:] for r in rows][::-1],
+        "values": [r["response_time"] for r in rows][::-1]
+    })
 
-
-# ---------------- FAILURES ----------------
-@app.route("/api/failures")
+@app.route("/logout")
 @login_required
-def failures():
-    conn = get_db()
+def logout():
+    logout_user()
+    return redirect("/login")
 
-    rows = conn.execute("""
-        SELECT api_url, timestamp
-        FROM logs
-        WHERE status_code != 200
-        ORDER BY id DESC LIMIT 5
-    """).fetchall()
-
-    conn.close()
-
-    return jsonify([
-        {"url": r["api_url"], "time": r["timestamp"]}
-        for r in rows
-    ])
-
-
-# ---------------- UPTIME PER API ----------------
-@app.route("/api/uptime-per-api")
-@login_required
-def uptime_per_api():
-    conn = get_db()
-
-    rows = conn.execute("""
-        SELECT api_url,
-               COUNT(*) as total,
-               SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) as success
-        FROM logs
-        GROUP BY api_url
-    """).fetchall()
-
-    result = []
-
-    for r in rows:
-        total = r["total"]
-        success = r["success"] or 0
-        uptime = (success / total * 100) if total > 0 else 0
-
-        result.append({
-            "api": r["api_url"],
-            "uptime": round(uptime, 2)
-        })
-
-    conn.close()
-
-    return jsonify(result)
-
-
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(debug=True)
