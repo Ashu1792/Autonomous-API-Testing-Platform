@@ -10,7 +10,10 @@ dashboard_bp = Blueprint("dashboard", __name__)
 def dashboard():
     conn = get_db()
 
+<<<<<<< HEAD
     # 🔹 latest logs per API
+=======
+>>>>>>> d852476d5a88aa5d9738024e40a2fec6ec34e6f6
     rows = conn.execute("""
         SELECT a.id, a.url,
                l.status_code,
@@ -22,6 +25,7 @@ def dashboard():
         )
     """).fetchall()
 
+<<<<<<< HEAD
     # 🔥 UPTIME CALCULATION
     uptime_data = {}
     for api in conn.execute("SELECT url FROM apis").fetchall():
@@ -40,6 +44,8 @@ def dashboard():
             uptime_data[url] = 0
 
     # 🔹 API LIST
+=======
+>>>>>>> d852476d5a88aa5d9738024e40a2fec6ec34e6f6
     apis = []
     for r in rows:
         status = "Healthy" if r["status_code"] == 200 else "Failed"
@@ -49,18 +55,36 @@ def dashboard():
             "url": r["url"],
             "status": status,
             "response_time": r["response_time"] or 0,
+<<<<<<< HEAD
             "uptime": uptime_data.get(r["url"], 0)
+=======
+            "uptime": 0
+>>>>>>> d852476d5a88aa5d9738024e40a2fec6ec34e6f6
         })
 
     total = len(apis)
     healthy = sum(1 for a in apis if a["status"] == "Healthy")
     failed = total - healthy
 
+<<<<<<< HEAD
     # 🔹 AVG TIME
     avg_row = conn.execute("SELECT AVG(response_time) as avg FROM logs").fetchone()
     avg_time = avg_row["avg"] or 0
 
     # 🔹 FAILED LOGS
+=======
+    # ✅ FIX 1: UPTIME
+    if total > 0:
+        uptime = (healthy / total) * 100
+    else:
+        uptime = 0
+
+    # ✅ FIX 2: AVG TIME
+    avg_row = conn.execute("SELECT AVG(response_time) as avg FROM logs").fetchone()
+    avg_time = avg_row["avg"] or 0
+
+    # ✅ FIX 3: FAILED LOGS
+>>>>>>> d852476d5a88aa5d9738024e40a2fec6ec34e6f6
     failed_logs = conn.execute("""
         SELECT api_url as url, timestamp as time
         FROM logs
@@ -69,7 +93,11 @@ def dashboard():
         LIMIT 5
     """).fetchall()
 
+<<<<<<< HEAD
     # 🔹 CHART DATA
+=======
+    # ✅ FIX 4: CHART DATA
+>>>>>>> d852476d5a88aa5d9738024e40a2fec6ec34e6f6
     chart_rows = conn.execute("""
         SELECT timestamp, response_time
         FROM logs
@@ -88,7 +116,11 @@ def dashboard():
         healthy=healthy,
         failed=failed,
         avg_time=round(avg_time, 3),
+<<<<<<< HEAD
         uptime=round((healthy / total) * 100, 2) if total > 0 else 0,
+=======
+        uptime=round(uptime, 2),
+>>>>>>> d852476d5a88aa5d9738024e40a2fec6ec34e6f6
         apis=apis,
         failed_logs=failed_logs,
         chart_labels=chart_labels,
