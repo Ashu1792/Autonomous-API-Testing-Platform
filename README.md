@@ -1,81 +1,89 @@
 # 🚀 Autonomous API Testing Platform
 
-An intelligent platform designed to **monitor APIs, predict failures, and validate API contracts automatically**. This system helps developers ensure API reliability, reduce downtime, and detect issues before they impact users.
+![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)
+![Flask](https://img.shields.io/badge/Framework-Flask-black?logo=flask)
+![SQLite](https://img.shields.io/badge/Database-SQLite-lightgrey?logo=sqlite)
+![Status](https://img.shields.io/badge/Project-Beta-yellow)
+![License](https://img.shields.io/badge/License-Educational-green)
 
-📌 Problem Statement
+---
 
-Modern applications depend heavily on APIs. However, API failures, downtime, and contract mismatches can lead to serious system issues. This project provides a **centralized solution** to monitor APIs, predict failures, and ensure contract compliance.
+## 📌 Overview
 
-🎯 Features
+An intelligent platform that **monitors APIs, predicts failures using machine learning, and validates API contracts**.
+It helps developers ensure **high availability, reliability, and early failure detection**.
 
-### ✅ API Monitoring
+---
 
-* Tracks health and status of multiple APIs
-* Provides real-time response status
-* Detects downtime and failures
+## 🎯 Key Features
 
-### 🤖 Failure Prediction
+✨ **API Monitoring**
 
-* Uses machine learning to predict potential API failures
-* Analyzes historical data for better accuracy
+* Real-time API health tracking
+* Status detection (Healthy / Failed)
 
-### 📜 Contract Testing
+🤖 **Failure Prediction**
 
-* Validates API responses against predefined schemas
-* Ensures consistency and reliability of APIs
+* ML-based prediction using historical data
+* Early detection of potential failures
 
-### 📧 Email Alert System
+📜 **Contract Testing**
 
-* Sends alerts when APIs fail or behave unexpectedly
-* Helps in quick issue resolution
+* Validates API responses against schemas
+* Prevents breaking changes
 
-### 📊 Dashboard Visualization
+📧 **Email Alerts**
 
-* Displays API status and analytics
-* Provides insights into system performance
+* Instant alerts for failures
+* Improves response time
+
+📊 **Interactive Dashboard**
+
+* Visual representation of API health
+* Insights into failures and trends
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Category | Technology Used       |
+| Layer    | Technology            |
 | -------- | --------------------- |
 | Backend  | Flask (Python)        |
 | Database | SQLite                |
 | Frontend | HTML, CSS, JavaScript |
-| ML Model | Python (Custom Model) |
+| ML Model | Python                |
 
 ---
 
-## ⚙️ Installation & Setup
+## ⚙️ Installation Guide
 
-### 1️⃣ Clone the Repository
+### 🔹 Step 1: Clone Repository
 
 ```bash
 git clone https://github.com/Ashu1792/Autonomous-API-Testing-Platform.git
 cd Autonomous-API-Testing-Platform
 ```
 
-### 2️⃣ Create Virtual Environment
+### 🔹 Step 2: Setup Virtual Environment
 
 ```bash
 python -m venv venv
-venv\Scripts\activate   # Windows
+venv\Scripts\activate
 ```
 
-### 3️⃣ Install Dependencies
+### 🔹 Step 3: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4️⃣ Run the Application
+### 🔹 Step 4: Run Application
 
 ```bash
 python app.py
 ```
 
-### 5️⃣ Open in Browser
+### 🔹 Step 5: Access App
 
 ```
 http://127.0.0.1:5000/
@@ -83,61 +91,207 @@ http://127.0.0.1:5000/
 
 ---
 
-## 📡 API Endpoints (Sample)
+# 📡 API Documentation
 
-| Method | Endpoint       | Description           |
-| ------ | -------------- | --------------------- |
-| GET    | /monitor       | Check API status      |
-| POST   | /predict       | Predict API failure   |
-| POST   | /contract-test | Validate API contract |
+## 🔐 Authentication
+
+> *(If implemented)*
+
+* Session-based login using Flask
+* Only authenticated users can access dashboard
 
 ---
 
-## 🧠 Project Workflow
+## 🔍 1. Monitor API
+
+**Endpoint:**
 
 ```
-User Input → API Monitoring → Data Storage → ML Prediction → Dashboard Output
+GET /monitor
+```
+
+**Description:**
+Checks the health status of registered APIs.
+
+**Response:**
+
+```json
+{
+  "api_url": "https://example.com",
+  "status": "Healthy",
+  "response_time": "120ms"
+}
+```
+
+**Error Response:**
+
+```json
+{
+  "status": "Failed",
+  "error": "Timeout"
+}
+```
+
+---
+
+## 🤖 2. Predict API Failure
+
+**Endpoint:**
+
+```
+POST /predict
+```
+
+**Request Body:**
+
+```json
+{
+  "api_url": "https://example.com"
+}
+```
+
+**Response:**
+
+```json
+{
+  "prediction": "High Risk",
+  "confidence": "87%"
+}
+```
+
+**Description:**
+Uses trained ML model to predict the likelihood of API failure.
+
+---
+
+## 📜 3. Contract Testing
+
+**Endpoint:**
+
+```
+POST /contract-test
+```
+
+**Request Body:**
+
+```json
+{
+  "api_url": "https://example.com",
+  "expected_schema": {
+    "name": "string",
+    "age": "number"
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "Valid",
+  "message": "Response matches contract"
+}
+```
+
+**Error Response:**
+
+```json
+{
+  "status": "Invalid",
+  "message": "Schema mismatch"
+}
+```
+
+---
+
+## 📧 4. Email Alerts
+
+**Trigger:**
+
+* Automatically triggered when API fails
+
+**Example Output:**
+
+```
+Subject: API Failure Alert
+
+Message:
+API https://example.com is DOWN
+```
+
+---
+
+## 📊 5. Dashboard Data
+
+**Endpoint:**
+
+```
+GET /dashboard-data
+```
+
+**Response:**
+
+```json
+{
+  "total_apis": 5,
+  "healthy": 4,
+  "failed": 1
+}
+```
+
+---
+
+## 🧠 System Workflow
+
+```
+User Input → API Monitoring → Data Storage → ML Prediction → Dashboard Visualization
 ```
 
 ---
 
 ## 📸 Screenshots
 
-<img width="1912" height="960" alt="image" src="https://github.com/user-attachments/assets/6267c392-3d70-487e-b88b-aae0236928d6" />
+<img width="1883" height="909" alt="image" src="https://github.com/user-attachments/assets/bf93abd4-1201-4e6f-84b8-a90bfd224edd" />
 
-<img width="1913" height="525" alt="image" src="https://github.com/user-attachments/assets/a545103e-a20a-4050-a322-b503e71ea41c" />
+<img width="1856" height="534" alt="image" src="https://github.com/user-attachments/assets/585b44f2-a676-47a0-a35d-ac9f1fbfdacb" />
 
-
-<img width="1881" height="444" alt="image" src="https://github.com/user-attachments/assets/e6bc9468-a5f8-4b26-80ce-9985d941520c" />
-
+<img width="1877" height="480" alt="image" src="https://github.com/user-attachments/assets/dded17fe-c3e9-4371-bcd9-22b20a4cad38" />
 
 
 
-* Dashboard view
-* API monitoring page
+
+* Dashboard
+* API monitoring
 * Prediction results
-* Contract testing output
+* Contract testing
 
 ---
 
-## 🔐 Security Considerations
+## 🔐 Security Measures
 
-* Input validation implemented
-* Secure API handling
-* Error handling for robustness
+✔ Input validation
+✔ Error handling
+✔ Secure database queries
 
----
+⚠️ Planned Improvements:
 
-## 📈 Future Improvements
-
-* Add failure history tracking dashboard
-* Improve ML model accuracy with more data
-* Implement advanced authentication & authorization
-* Add real-time analytics and logs
+* Authentication & Authorization
+* Rate limiting
+* SQL Injection prevention
+* XSS protection
 
 ---
 
-## 👨‍💻 Team Members
+## 📈 Future Enhancements
+
+* 📊 Failure history tracking (critical feature)
+* 🔐 Advanced security implementation
+* 📉 Real-time analytics
+* ☁️ Cloud deployment
+
+---
+
+## 👨‍💻 Team
 
 * Ashu Pal
 * Anamika Gupta
@@ -147,18 +301,12 @@ User Input → API Monitoring → Data Storage → ML Prediction → Dashboard O
 
 ## 📊 Project Status
 
-🟡 Beta Version – Core features implemented, improvements in progress
+🟡 **Beta Version – Actively Improving**
 
 ---
 
-## 📄 License
+## ⭐ Support
 
-This project is for academic and educational purposes.
-
----
-
-## 🙌 Acknowledgment
-
-Thanks to mentors and faculty for guidance and support throughout the project.
+If you like this project, consider giving it a ⭐ on GitHub!
 
 ---
