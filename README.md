@@ -1,153 +1,161 @@
-🚀 Autonomous API Failure Prediction & Contract Testing Platform
+# 🚀 Autonomous API Testing Platform
 
-A smart API monitoring system that tracks API health, predicts failures, validates contracts, and provides real-time dashboards — inspired by modern DevOps tools like Grafana.
+An intelligent platform designed to **monitor APIs, predict failures, and validate API contracts automatically**. This system helps developers ensure API reliability, reduce downtime, and detect issues before they impact users.
 
-📌 Project Overview
+📌 Problem Statement
 
-This platform continuously monitors multiple APIs, logs their performance, and provides:
+Modern applications depend heavily on APIs. However, API failures, downtime, and contract mismatches can lead to serious system issues. This project provides a **centralized solution** to monitor APIs, predict failures, and ensure contract compliance.
 
-📡 Real-time API monitoring
-⚡ Response time tracking
-📊 Interactive charts & dashboards
-🤖 AI-based failure prediction
-🧪 Contract testing (JSON validation)
-🚨 Smart alert system (Email alerts)
-🔁 SRE-based alert escalation
-📈 Failure history tracking
-🎯 Key Features
-🔹 1. Multi-API Monitoring
+🎯 Features
 
-Monitor multiple APIs simultaneously:
+### ✅ API Monitoring
 
-Weather APIs
-Public APIs
-Custom APIs
+* Tracks health and status of multiple APIs
+* Provides real-time response status
+* Detects downtime and failures
 
-🔹 2. Real-Time Dashboard
+### 🤖 Failure Prediction
 
-Live response time graph
-API health pie chart
-Latency comparison bar chart
-Auto-refresh every 10 seconds
+* Uses machine learning to predict potential API failures
+* Analyzes historical data for better accuracy
 
-🔹 3. AI Failure Prediction
+### 📜 Contract Testing
 
-Predicts API risk level:
-🟢 Low Risk
-🟡 Medium Risk
-🔴 High Risk
-Gauge-style visualization
+* Validates API responses against predefined schemas
+* Ensures consistency and reliability of APIs
 
-🔹 4. Smart Alert System
+### 📧 Email Alert System
 
-Sends email alerts on API failure
-Uses SRE alert escalation logic:
-Alert only after 3 consecutive failures
+* Sends alerts when APIs fail or behave unexpectedly
+* Helps in quick issue resolution
 
-🔹 5. Contract Testing
+### 📊 Dashboard Visualization
 
-Validates API response structure using JSON schema
-Ensures API reliability
+* Displays API status and analytics
+* Provides insights into system performance
 
-🔹 6. Failure History Tracking
+---
 
-Stores API failures in database
-Displays recent failures in dashboard
+## 🛠️ Tech Stack
 
-🛠️ Tech Stack
-🔹 Backend
-Python
-Flask
-SQLite
-🔹 Frontend
-HTML, CSS
-Bootstrap 5
-Chart.js
-🔹 Libraries
-requests
-jsonschema
-smtplib (for alerts)
+| Category | Technology Used       |
+| -------- | --------------------- |
+| Backend  | Flask (Python)        |
+| Database | SQLite                |
+| Frontend | HTML, CSS, JavaScript |
+| ML Model | Python (Custom Model) |
 
-📂 Project Structure
+---
 
-API-Monitoring-Platform/
+## ⚙️ Installation & Setup
 
-│
-├── app.py                  # Main Flask app
-├── monitor.py              # API monitoring logic
-├── predictor.py            # Failure prediction logic
-├── contract_test.py        # Contract validation
-├── alert.py                # Email alert system
-├── scheduler.py            # Background scheduler
-│
-├── templates/
-│   └── dashboard.html      # UI Dashboard
-│
-├── static/
-│   └── style.css           # Styling
-│
-├── data/
-│   └── api_logs.db         # Database
-│
-└── README.md
+### 1️⃣ Clone the Repository
 
+```bash
+git clone https://github.com/Ashu1792/Autonomous-API-Testing-Platform.git
+cd Autonomous-API-Testing-Platform
+```
 
-⚙️ Installation & Setup
+### 2️⃣ Create Virtual Environment
 
-🔹 Step 1: Clone Repository
-git clone https://github.com/your-username/API-Monitoring-Platform.git
-cd API-Monitoring-Platform
+```bash
+python -m venv venv
+venv\Scripts\activate   # Windows
+```
 
-🔹 Step 2: Install Dependencies
-pip install flask requests jsonschema
+### 3️⃣ Install Dependencies
 
-🔹 Step 3: Run Application
+```bash
+pip install -r requirements.txt
+```
+
+### 4️⃣ Run the Application
+
+```bash
 python app.py
+```
 
-🔹 Step 4: Open Dashboard
-http://127.0.0.1:5000
+### 5️⃣ Open in Browser
 
-📊 How It Works
+```
+http://127.0.0.1:5000/
+```
 
-API List → Monitor → Store Logs → Analyze → Predict → Display Dashboard
-APIs are monitored using requests
+---
 
-Response time & status are logged in SQLite
-Failure prediction logic analyzes API behavior
-Alerts are triggered on repeated failures
-Dashboard displays real-time insights
+## 📡 API Endpoints (Sample)
 
-🧪 Sample APIs for Testing
+| Method | Endpoint       | Description           |
+| ------ | -------------- | --------------------- |
+| GET    | /monitor       | Check API status      |
+| POST   | /predict       | Predict API failure   |
+| POST   | /contract-test | Validate API contract |
 
-https://jsonplaceholder.typicode.com/posts
-https://api.github.com/users/octocat
-https://official-joke-api.appspot.com/random_joke
-https://httpstat.us/500
+---
 
-🚨 Alert System Setup (Gmail)
-Enable 2-Step Verification
-Generate App Password
-Add credentials in alert.py
+## 🧠 Project Workflow
 
-📈 Future Enhancements
-🔄 Real-time WebSocket updates
-🧠 Advanced ML model for prediction
-☁️ Cloud deployment (AWS/Docker)
-📱 Mobile-friendly dashboard
-🔔 Slack/Telegram alerts
-👨‍💻 Author
+```
+User Input → API Monitoring → Data Storage → ML Prediction → Dashboard Output
+```
 
-⭐ Conclusion
+---
 
-This project demonstrates real-world DevOps monitoring concepts including:
+## 📸 Screenshots
 
-API observability
-Failure prediction
-Alerting systems
-Performance tracking
+<img width="1912" height="960" alt="image" src="https://github.com/user-attachments/assets/6267c392-3d70-487e-b88b-aae0236928d6" />
 
-It is a mini version of industry tools like Grafana and Datadog, making it a strong portfolio project.
+<img width="1913" height="525" alt="image" src="https://github.com/user-attachments/assets/a545103e-a20a-4050-a322-b503e71ea41c" />
 
-⭐ If you like this project
+<img width="1881" height="444" alt="image" src="https://github.com/user-attachments/assets/e6bc9468-a5f8-4b26-80ce-9985d941520c" />
 
-Give it a ⭐ on GitHub!
+
+* Dashboard view
+* API monitoring page
+* Prediction results
+* Contract testing output
+
+---
+
+## 🔐 Security Considerations
+
+* Input validation implemented
+* Secure API handling
+* Error handling for robustness
+
+---
+
+## 📈 Future Improvements
+
+* Add failure history tracking dashboard
+* Improve ML model accuracy with more data
+* Implement advanced authentication & authorization
+* Add real-time analytics and logs
+
+---
+
+## 👨‍💻 Team Members
+
+* Ashu Pal
+* Anamika Gupta
+* Hemant Raj
+
+---
+
+## 📊 Project Status
+
+🟡 Beta Version – Core features implemented, improvements in progress
+
+---
+
+## 📄 License
+
+This project is for academic and educational purposes.
+
+---
+
+## 🙌 Acknowledgment
+
+Thanks to mentors and faculty for guidance and support throughout the project.
+
+---
