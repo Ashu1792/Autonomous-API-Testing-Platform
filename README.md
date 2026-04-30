@@ -107,7 +107,10 @@ User Input → API Monitoring → Data Storage → ML Prediction → Dashboard O
 
 <img width="1913" height="525" alt="image" src="https://github.com/user-attachments/assets/a545103e-a20a-4050-a322-b503e71ea41c" />
 
+
 <img width="1881" height="444" alt="image" src="https://github.com/user-attachments/assets/e6bc9468-a5f8-4b26-80ce-9985d941520c" />
+
+
 
 
 * Dashboard view
