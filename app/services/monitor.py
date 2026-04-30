@@ -1,10 +1,9 @@
-import requests
-import sqlite3
 import time
+import requests
+from app.models.database import get_db
 
 def monitor_api():
-    conn = sqlite3.connect("data/api_logs.db")
-    conn.row_factory = sqlite3.Row
+    conn = get_db()
     cursor = conn.cursor()
 
     apis = cursor.execute("SELECT * FROM apis").fetchall()
@@ -14,11 +13,7 @@ def monitor_api():
 
         try:
             start = time.time()
-            res = requests.get(
-                url,
-                timeout=5,
-                headers={"User-Agent": "Mozilla/5.0"}
-            )
+            res = requests.get(url, timeout=5)
             response_time = round(time.time() - start, 3)
             status = res.status_code
         except:
@@ -26,7 +21,7 @@ def monitor_api():
             status = 500
 
         cursor.execute(
-            "INSERT INTO logs (api_url, status_code, response_time) VALUES (?, ?, ?)",
+            "INSERT INTO logs (api_url, status_code, response_time, timestamp) VALUES (?, ?, ?, datetime('now'))",
             (url, status, response_time)
         )
 

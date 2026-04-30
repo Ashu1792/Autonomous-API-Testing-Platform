@@ -105,13 +105,21 @@ input.form-control {
         <h3 class="text-center mb-3">API Monitoring Dashboard</h3>
 
         <!-- Add API -->
-        <div class="text-center mb-4">
-            <form method="POST" action="/add_api" class="d-inline-flex gap-2">
-                <input type="text" name="url" class="form-control" placeholder="Enter API URL" required>
-                <button class="btn btn-custom">Add API</button>
-                <a href="/clear_history" class="btn btn-warning">Clear History</a>
-            </form>
-        </div>
+    <div class="text-center mb-4">
+    <form method="POST" action="/add_api" style="display:flex; gap:10px; justify-content:center;">
+        <input type="text" name="url" placeholder="Enter API URL" required style="padding:10px; width:300px;">
+    
+        <button type="submit" style="padding:10px 20px; background:#007bff; color:white; border:none; border-radius:5px;">
+            Add API
+        </button>
+    
+        <a href="/clear_history">
+            <button type="button" style="padding:10px 20px; background:orange; border:none;">
+                Clear History
+            </button>
+        </a>
+    </form>
+    </div>
 
         <!-- Stats -->
         <div class="row mb-4">
@@ -237,43 +245,49 @@ input.form-control {
     </div>
 
     <!-- Charts Script -->
+
     <script>
-     const lineCtx = document.getElementById('lineChart');
+        const lineCtx = document.getElementById('lineChart');
 
         new Chart(lineCtx, {
             type: 'line',
             data: {
-                labels: {{ chart_labels | tojson }},
+                labels: {{ chart_labels | default([]) | tojson }},
             datasets: [{
                 label: 'Response Time',
-                data: {{ chart_data | tojson }},
+                data: {{ chart_data | default ([]) | tojson }},
             borderColor: 'blue',
             fill: false
-        }]
-    },
+            }]
+        },
             options: {
             responsive: true,
             maintainAspectRatio: false
         }
-});
+    });
 
-    const pieCtx = document.getElementById('pieChart');
 
-new Chart(pieCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['Healthy', 'Failed'],
-        datasets: [{
-            data: [{{ healthy }}, {{ failed }}],
+        const pieCtx = document.getElementById('pieChart');
+
+        new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Healthy', 'Failed'],
+                datasets: [{
+                    data: [
+                        {{ healthy | default(0)
+                }},
+                    {{ failed | default(0) }}
+                ],
             backgroundColor: ['green', 'red']
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '65%'
-    }
-});
+            }]
+        },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%'
+        }
+    });
     </script>
 
 </body>
