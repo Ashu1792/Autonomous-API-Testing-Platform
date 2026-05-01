@@ -12,82 +12,194 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-       body {
-    background: linear-gradient(135deg, #dbeafe, #e0f2fe);
-    font-family: 'Segoe UI', sans-serif;
-}
-
-       .card {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    border: 1px solid #cbd5e1;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-}
-
-        .stat-card {
+        /* 🌈 BODY */
+        body {
+            background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+        }
+    
+        /* 📦 CONTAINER */
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 30px;
+        }
+    
+        /* 🏷️ TITLE */
+        h1 {
             text-align: center;
-            padding: 15px;
+            margin-bottom: 30px;
+        }
+    
+        /* ➕ ADD API */
+        .add-api {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    
+        input {
+            padding: 10px;
+            width: 300px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+    
+        /* 🔘 BUTTON */
+        button {
+            padding: 10px 15px;
+            border: none;
+            background: #0ea5e9;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+    
+        /* 🔥 BUTTON EFFECT */
+        button:hover {
+            background: #0284c7;
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.8);
+        }
+    
+        button:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 30px rgba(14, 165, 233, 1);
+        }
+    
+        /* 📊 STATS */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+    
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
             font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
         }
-
-       .btn-custom {
-    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
-    border: none;
-    color: white;
-    border-radius: 10px;
-    padding: 8px 16px;
-}
-
-.btn-custom:hover {
-    opacity: 0.9;
-}
-
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 10px;
-            font-size: 12px;
+    
+        /* 🔥 STAT CARD EFFECT */
+        .stat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 0 25px rgba(14, 165, 233, 0.6);
         }
-
-       .healthy {
-    background: #22c55e;
-    color: white;
-}
-
-.failed {
-    background: #ef4444;
-    color: white;
-}
-
-h3, h6 {
-    color: #1e293b;
-    font-weight: 600;
-}
-
-      .top-bar {
-    background: rgba(255,255,255,0.6);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid #cbd5e1;
-}
-
-        .chart-container {
-    position: relative;
-    height: 300px;   /* SAME HEIGHT FOR BOTH */
-    width: 100%;
-}
-
-.chart-card {
-    height: 100%;
-}
-.row {
-    align-items: stretch;
-}
-
-input.form-control {
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-    background: rgba(255,255,255,0.8);
-}
+    
+        .stat-card span {
+            font-size: 22px;
+            display: block;
+            margin-top: 10px;
+        }
+    
+        /* 📦 CARD */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+    
+        /* 🔥 CARD EFFECT */
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
+        }
+    
+        /* 🔥 EQUAL HEIGHT GRID (IMPORTANT FIX) */
+        .dashboard-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+    
+        .dashboard-row .card {
+            height: 350px;
+            justify-content: space-between;
+        }
+    
+        /* 📊 GRAPH FIX */
+        canvas {
+            width: 100% !important;
+            height: 250px !important;
+            margin-top: 10px;
+        }
+    
+        /* 📋 TABLE */
+        .table-card {
+            overflow-x: auto;
+        }
+    
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+    
+        th {
+            background: #e2e8f0;
+            padding: 12px;
+        }
+    
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+    
+        /* 🔥 TABLE ROW EFFECT */
+        tr {
+            transition: all 0.2s ease;
+        }
+    
+        tr:hover {
+            background: #f1f5f9;
+        }
+    
+        /* 🟢 STATUS */
+        .healthy {
+            background: #22c55e;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+    
+        .healthy:hover {
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+        }
+    
+        /* 🔴 STATUS */
+        .failed {
+            background: #ef4444;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+    
+        .failed:hover {
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
+        }
+    
+        /* 📱 RESPONSIVE */
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+    
+            .dashboard-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
