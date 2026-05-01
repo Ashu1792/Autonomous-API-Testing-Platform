@@ -2,7 +2,20 @@ from flask import Flask, session, redirect
 from functools import wraps
 import threading
 import time
+<<<<<<< HEAD
 from app.services.monitor import monitor_apis
+=======
+<<<<<<< HEAD
+from app.services.monitor import monitor_apis
+=======
+<<<<<<< HEAD
+from app.services.monitor import monitor_apis
+=======
+from app.services.monitor import monitor_api
+
+>>>>>>> d852476d5a88aa5d9738024e40a2fec6ec34e6f6
+>>>>>>> 2789ad30ad4dd1b7f064c94d07fffe2586c764e6
+>>>>>>> c9d2a5cf1f266020c8323cf9667461c245f650fd
 def login_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -14,7 +27,19 @@ def login_required(func):
 
 def background_monitor():
     while True:
+<<<<<<< HEAD
         monitor_apis()
+=======
+<<<<<<< HEAD
+        monitor_apis()
+=======
+<<<<<<< HEAD
+        monitor_apis()
+=======
+        monitor_api()
+>>>>>>> d852476d5a88aa5d9738024e40a2fec6ec34e6f6
+>>>>>>> 2789ad30ad4dd1b7f064c94d07fffe2586c764e6
+>>>>>>> c9d2a5cf1f266020c8323cf9667461c245f650fd
         time.sleep(10)
 
 
