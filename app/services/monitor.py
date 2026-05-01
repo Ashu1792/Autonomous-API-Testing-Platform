@@ -2,13 +2,7 @@ import time
 import requests
 from app.models.database import get_db
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 2789ad30ad4dd1b7f064c94d07fffe2586c764e6
->>>>>>> c9d2a5cf1f266020c8323cf9667461c245f650fd
+
 def monitor_apis():
     while True:
         conn = get_db()
@@ -36,14 +30,14 @@ def monitor_apis():
 
         print("🔄 Auto monitoring running...")
 
-<<<<<<< HEAD
+
         time.sleep(10)
-=======
-<<<<<<< HEAD
+
+
         time.sleep(10)
-=======
+
         time.sleep(10)
-=======
+
 def monitor_api():
     conn = get_db()
     cursor = conn.cursor()
@@ -69,6 +63,3 @@ def monitor_api():
 
     conn.commit()
     conn.close()
->>>>>>> d852476d5a88aa5d9738024e40a2fec6ec34e6f6
->>>>>>> 2789ad30ad4dd1b7f064c94d07fffe2586c764e6
->>>>>>> c9d2a5cf1f266020c8323cf9667461c245f650fd
